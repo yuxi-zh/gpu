@@ -5,37 +5,9 @@
 #include "cuda_runtime.h"
 #include "cublas_v2.h"
 #include "helper_cuda.h"
+#include "cooperative_groups.h"
 
-__global__ void threeMatrixMulCuda8(cublasStatus_t *returnValue, int n,
-									const float *A, const float *B,
-									const float *C, const float *D)
-{
-	cublasHanlde_t hanlde;
-	cublasStatus_t status = cublasCreate(&hanlde);
-
-	if (status != CUBLAS_STATUS_SUCCESS)
-		goto finish;
-
-	float *T = (float *)malloc(sizeof(float) * n * n);
-	if (T == nullptr)
-		goto finish;
-
-	status = cublasSgemm(
-		hanlde, CUBLAS_OP_N, CUBLAS_OP_N, n, n, n, 1.0f, B, n, C, n, 0.0f, D, n
-	);
-	if (status != CUBLAS_STATUS_SUCCESS)
-		goto finish;
-
-	status = cublasSgemm(
-		hanlde, CUBLAS_OP_N, CUBLAS_OP_N, n, n, n, 1.0f, A, n, T, n, 0.0f, D, n
-	);
-	if (status != CUBLAS_STATUS_SUCCESS)
-		goto finish;
-
-finish:
-	cublasDestory(hanlde);
-	*returnValue = status;
-}
+using namespace cooperative_groups;
 
 #define allocate_host_memory(name, size, errhanlde) 							\
 	float *name = (float *)malloc(sizeof(float) * size); 						\
@@ -70,6 +42,126 @@ finish:
 #define random_fill(M, n)														\
 	for (int i = 0; i < n; ++i)													\
 		M[i] = rand() / (float)RAND_MAX;										\
+
+void threeMatrixMulV0(int n, const float *A, const float *B,
+						const float *C, const float *D)
+{
+	for (int i = 0; i < n; ++i)
+	{
+		for (int j = 0; j < n; ++j)
+		{
+			D[i * n + j] = 0;
+			for (int k = 0; k < n; ++k)
+			{
+				for (int l = 0; l < n; ++l)
+				{
+					D[i * n + j] += A[i *n + k] * B[k * n + l] * C[l * n + j];
+				}
+			}
+		}
+	}
+}
+
+void threeMatrixMulV1(int n, const float *A, const float *B, 
+						const float *C, const float *D)
+{
+	cublasHanlde_t hanlde;
+	cublasStatus_t status = cublasCreate(&hanlde);
+
+	float *DT;
+	allocate_device_memory(DT, SIZE, finish);
+
+	status = cublasSgemm(
+		hanlde, CUBLAS_OP_N, CUBLAS_OP_N, n, n, n, 1.0f, B, n, C, n, 0.0f, T, n
+	);
+	if (status != CUBLAS_STATUS_SUCCESS)
+		goto finish;
+
+	status = cublasSgemm(
+		hanlde, CUBLAS_OP_N, CUBLAS_OP_N, n, n, n, 1.0f, A, n, T, n, 0.0f, D, n
+	);
+	if (status != CUBLAS_STATUS_SUCCESS)
+		goto finish;
+
+finish:
+	cublasDestory(hanlde);
+}
+
+__global__ void threeMatrixMulV2(cublasStatus_t *returnValue, int n,
+									const float *A, const float *B,
+									const float *C, const float *D,
+									const float *T)
+{
+	cublasHanlde_t hanlde;
+	cublasStatus_t status = cublasCreate(&hanlde);
+
+	if (status != CUBLAS_STATUS_SUCCESS)
+		goto finish;
+
+	status = cublasSgemm(
+		hanlde, CUBLAS_OP_N, CUBLAS_OP_N, n, n, n, 1.0f, B, n, C, n, 0.0f, T, n
+	);
+	if (status != CUBLAS_STATUS_SUCCESS)
+		goto finish;
+
+	status = cublasSgemm(
+		hanlde, CUBLAS_OP_N, CUBLAS_OP_N, n, n, n, 1.0f, A, n, T, n, 0.0f, D, n
+	);
+	if (status != CUBLAS_STATUS_SUCCESS)
+		goto finish;
+
+
+finish:
+	cublasDestory(hanlde);
+	*returnValue = status;
+}
+
+__device__ void twoMatrixMul(float* __restrict__ A, float* __restrict__ B,
+								float* __restrict__ C)
+{
+
+  __shared__ float A_shared[1024];
+  __shared__ float B_shared[1024];
+
+  for (int dx_inner_outer_init = 0; dx_inner_outer_init < 4; ++dx_inner_outer_init) {
+    for (int dy_inner_outer_init = 0; dy_inner_outer_init < 4; ++dy_inner_outer_init) {
+      C[(((((((((int)blockIdx.x) * 1024) + ((int)blockIdx.y)) + (((int)threadIdx.x) * 16)) * 64) + ((int)threadIdx.y)) + (dx_inner_outer_init * 16384)) + (dy_inner_outer_init * 16))] = 0.000000e+00f;
+    }
+  }
+  
+  for (int k_outer = 0; k_outer < 64; ++k_outer) {
+    __syncthreads();
+    
+    for (int ax0_outer = 0; ax0_outer < 4; ++ax0_outer) {
+      A_shared[(((((int)threadIdx.x) * 16) + ((int)threadIdx.y)) + (ax0_outer * 256))] = A[((((((((int)blockIdx.x) * 64) + ((int)threadIdx.x)) * 1024) + ((int)threadIdx.y)) + (k_outer * 16)) + (ax0_outer * 16384))];
+    }
+
+    for (int ax1_outer = 0; ax1_outer < 4; ++ax1_outer) {
+      B_shared[(((((int)threadIdx.x) * 64) + ((int)threadIdx.y)) + (ax1_outer * 16))] = B[(((((((int)blockIdx.y) + (((int)threadIdx.x) * 16)) * 64) + ((int)threadIdx.y)) + (k_outer * 16384)) + (ax1_outer * 16))];
+    }
+    __syncthreads();
+    
+    for (int k_inner = 0; k_inner < 16; ++k_inner) {
+      for (int dx_inner_outer = 0; dx_inner_outer < 4; ++dx_inner_outer) {
+        for (int dy_inner_outer = 0; dy_inner_outer < 4; ++dy_inner_outer) {
+          C[(((((((((int)blockIdx.x) * 1024) + ((int)blockIdx.y)) + (((int)threadIdx.x) * 16)) * 64) + ((int)threadIdx.y)) + (dx_inner_outer * 16384)) + (dy_inner_outer * 16))] = (C[(((((((((int)blockIdx.x) * 1024) + ((int)blockIdx.y)) + (((int)threadIdx.x) * 16)) * 64) + ((int)threadIdx.y)) + (dx_inner_outer * 16384)) + (dy_inner_outer * 16))] + (A_shared[(((((int)threadIdx.x) * 16) + k_inner) + (dx_inner_outer * 256))] * B_shared[((((int)threadIdx.y) + (k_inner * 64)) + (dy_inner_outer * 16))]));
+        }
+      }
+    }
+  }
+}
+
+__global__ void threeMatrixMulV3(int n, const float *A, const float *B,
+									const float *C, const float *D, const float *T)
+{
+	grid_group grid = this_grid();
+
+	twoMatrixMul(n, B, C, T);
+
+	grid.sync();
+
+	twoMatrixMul(n, A, T, D);
+}
 
 int main(int argc, char const *argv[])
 {

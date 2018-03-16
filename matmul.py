@@ -7,7 +7,7 @@ N = 1024
 A = tvm.placeholder((M, K), name="A")
 B = tvm.placeholder((K, N), name="B")
 k = tvm.reduce_axis((0, K), name="k")
-C = tvm.compute((M, N), lambda dx, dy: tvm.sum(A[dx, k] * B[k, dy], axis=k), name="C")
+C = tvm.compute((M, N), lambda x, y: tvm.sum(A[x, k] * B[k, y], axis=k), name="C")
 
 schedule = tvm.create_schedule(C.op)
 
@@ -38,6 +38,9 @@ schedule[C].reorder(cxo, cyo, cxii, cyii, ko, ki, cxi, cyi)
 schedule[C].bind(cxii, thd_x)
 schedule[C].bind(cyii, thd_y)
 
+cxyi = schedule[C].fuse(cxi, cyi)
+schedule[C].unroll(cxyi)
+
 AS = schedule.cache_read(A, 'shared', [C])
 schedule[AS].compute_at(schedule[C], ko)
 asx, asy = AS.op.axis
@@ -65,5 +68,5 @@ schedule[BS].bind(bsyi, thd_y)
 lower_func = tvm.lower(schedule, [A, B, C], simple_mode=True)
 print(lower_func)
 
-build_func = tvm.build(schedule, [A, B, C], target='cuda', name="K1")
+build_func = tvm.build(schedule, [A, B, C], target='cuda', name="matmul")
 print(build_func.imported_modules[0].get_source())
