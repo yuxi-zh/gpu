@@ -5,30 +5,30 @@
 
 #include "cuda_runtime.h"
 #include "cublas_v2.h"
-#include "helper_cuda.h"
+// #include "helper_cuda.h"
 
 #define N 			(1024)
 #define SIZE 		(N * N)
 #define OUTER_RUNS	(50)
 
 #define allocate_host_memory(name, size, errhanlde) 							\
-	float *name = (float *)malloc(sizeof(float) * size); 						\
-	if (name == nullptr) 														\
+	name = (float *)malloc(sizeof(float) * size); 						\
+	if (name == NULL) 														\
 	{																			\
 		fprintf(stderr, "Host memory allocation for %s failed: %s\n",			\
-			#name, strerrno(errno));											\
+			#name, strerror(errno));											\
 		goto errhanlde;															\
 	}
 
 #define allocate_device_memory(name, size, errhanlde)							\
-	if (cudaMalloc((void **)&name, size * sizeof(name[0]) != cudaSuccess)		\
+	if (cudaMalloc((void **)&name, size * sizeof(name[0])) != cudaSuccess)		\
 	{																			\
 		fprintf(stderr, "Device memory allocation for %s failed\n", #name);		\
 		goto errhanlde;															\
 	}
 
 #define initialize_device_matrices(host, device, size, errhanlde)				\
-	status = cublasSetVector(size, sizeof(host[0]), host, 1, device, 1)			\
+	status = cublasSetVector(size, sizeof(host[0]), host, 1, device, 1);		\
 	if (status != CUBLAS_STATUS_SUCCESS)										\
 	{																			\
 		fprintf(stderr, "device access from %s to %s error\n", #host, #device);	\
@@ -36,7 +36,7 @@
 	}
 
 #define free_device_memory(name, errhanlde)										\
-	if ((error = cudaFree(name)) != cudaSuccess) {								\
+	if (cudaFree(name) != cudaSuccess) {								\
 		fprintf(stderr, "Memory free %s failed\n", #name);						\
 		goto errhanlde;															\
 	}
@@ -45,8 +45,8 @@
 	for (int i = 0; i < n; ++i)													\
 		M[i] = rand() / (float)RAND_MAX;										\
 
-void threeMatrixMulV0(int n, const float *A, const float *B,
-						const float *C, const float *D)
+void threeMatrixMulV0(int n, const float* A, const float* B,
+					 const float* C, float* D)
 {
 	for (int i = 0; i < n; ++i)
 	{
@@ -64,62 +64,64 @@ void threeMatrixMulV0(int n, const float *A, const float *B,
 	}
 }
 
-void threeMatrixMulV1(cublasStatus_t *returnValue, int n, 
-						const float *A, const float *B, 
-						const float *C, const float *D)
+void threeMatrixMulV1(int n, const float* A, const float* B, 
+					 const float* C, float* D)
 {
-	cublasHanlde_t hanlde;
+	cublasHandle_t hanlde;
 	cublasStatus_t status = cublasCreate(&hanlde);
+	float *T;
+	float alpha = 1.0f, beta = 0.0f;
 
 	if (status != CUBLAS_STATUS_SUCCESS)
-		goto clean_handle;
+		goto finish;
 
-	float *DT;
-	allocate_device_memory(DT, SIZE, clean_handle);
+	allocate_device_memory(T, SIZE, clean_handle);
 
 	status = cublasSgemm(
-		hanlde, CUBLAS_OP_N, CUBLAS_OP_N, n, n, n, 1.0f, B, n, C, n, 0.0f, T, n
+		hanlde, CUBLAS_OP_N, CUBLAS_OP_N, n, n, n, &alpha, B, n, C, n, &beta, T, n
 	);
 	if (status != CUBLAS_STATUS_SUCCESS)
 		goto clean_t;
 
 	status = cublasSgemm(
-		hanlde, CUBLAS_OP_N, CUBLAS_OP_N, n, n, n, 1.0f, A, n, T, n, 0.0f, D, n
+		hanlde, CUBLAS_OP_N, CUBLAS_OP_N, n, n, n, &alpha, A, n, T, n, &beta, D, n
 	);
 	if (status != CUBLAS_STATUS_SUCCESS)
 		goto clean_t;
 
 clean_t:
-	free_device_memory(DT);
+	free_device_memory(T, clean_handle);
 
 clean_handle:
-	cublasDestory(hanlde);
+	cublasDestroy(hanlde);
 
-	*returnValue = status;
+finish: return;
 }
 
 __global__ void __threeMatrixMulV2(cublasStatus_t *returnValue, int n,
-									const float *A, const float *B,
-									const float *C, const float *D)
+								 const float* A, const float* B,
+								 const float* C, float* D)
 {
-	cublasHanlde_t hanlde;
+	cublasHandle_t hanlde;
 	cublasStatus_t status = cublasCreate(&hanlde);
+	float *T;
+	float alpha = 1.0f, beta = 0.0f;
 
 	if (status != CUBLAS_STATUS_SUCCESS)
 		goto clean_handle;
 
-	float *T = (float *)malloc(sizeof(float) * SIZE);
-	if (T == nullptr)
+	T = (float *)malloc(sizeof(float) * SIZE);
+	if (T == NULL)
 		goto clean_handle;
 
 	status = cublasSgemm(
-		hanlde, CUBLAS_OP_N, CUBLAS_OP_N, n, n, n, 1.0f, B, n, C, n, 0.0f, T, n
+		hanlde, CUBLAS_OP_N, CUBLAS_OP_N, n, n, n, &alpha, B, n, C, n, &beta, T, n
 	);
 	if (status != CUBLAS_STATUS_SUCCESS)
 		goto clean_t;
 
 	status = cublasSgemm(
-		hanlde, CUBLAS_OP_N, CUBLAS_OP_N, n, n, n, 1.0f, A, n, T, n, 0.0f, D, n
+		hanlde, CUBLAS_OP_N, CUBLAS_OP_N, n, n, n, &alpha, A, n, T, n, &beta, D, n
 	);
 	if (status != CUBLAS_STATUS_SUCCESS)
 		goto clean_t;
@@ -128,16 +130,16 @@ clean_t:
 	free(T);
 
 clean_handle:
-	cublasDestory(hanlde);
+	cublasDestroy(hanlde);
 
 	*returnValue = status;
 }
 
-void threeMatrixMulV2(int n, const float *A, const float *B, 
-						const float *C, const float *D)
+void threeMatrixMulV2(int n, const float* A, const float* B, 
+						const float* C, float* D)
 {
 	cublasStatus_t status;
-	cublasHanlde_t handle;
+	cublasHandle_t handle;
 
 	status = cublasCreate(&handle);
 	if (status != CUBLAS_STATUS_SUCCESS)
@@ -149,7 +151,7 @@ void threeMatrixMulV2(int n, const float *A, const float *B,
 	cublasStatus_t *dev_status;
 	allocate_device_memory(dev_status, 1, cds);		
 
-	threeMatrixMulCuda8<<<1, 1>>>(dev_status, N, DA, DB, DC, DD);
+	__threeMatrixMulV2<<<1, 1>>>(dev_status, N, A, B, C, D);
 
 	cudaError_t error;
 	if ((error = cudaGetLastError()) != cudaSuccess)
@@ -159,11 +161,11 @@ void threeMatrixMulV2(int n, const float *A, const float *B,
 		goto cds;
 	}
 
-	if ((error = cudaMemCpy(&status, dev_status, sizeof(cublasStatus_t),
+	if ((error = cudaMemcpy(&status, dev_status, sizeof(cublasStatus_t),
 		cudaMemcpyDeviceToHost)) != cudaSuccess)
 	{
 		fprintf(stderr, "Device to host memory copy failed: %s\n",
-			cudaGetLastError(error));
+			cudaGetErrorString(error));
 		goto cds;
 	}
 
@@ -173,31 +175,23 @@ void threeMatrixMulV2(int n, const float *A, const float *B,
 		goto cds;
 	}
 
-	if ((error = cudaMemCpy(&HD, DD, sizeof(float) * SIZE,
-		cudaMemcpyDeviceToHost)) != cudaSuccess)
-	{
-		fprintf(stderr, "Device to host memory copy failed: %s\n",
-			cudaGetLastError(error));
-		goto cds;
-	}
+cds:free_device_memory(dev_status, chandle);
 
-cds:free_device_memory(dev_status, finish);
-
-chandle:cublasDestory(hanlde);
+chandle:cublasDestroy(handle);
 
 finish:return;
 
 }
 
-typedef void (*threeMatrixMulFunc)(int, const float, const float,
-									const float, const float);
+typedef void (*threeMatrixMulFunc)(int, const float*, const float*, 
+									const float*, float*);
 
-void __evalute(threeMatrixMulFunc threeMatrixMul, int n, const float *A,
-				const float *B, const float *C, const float *D)
+void __evaluate(threeMatrixMulFunc threeMatrixMul, int n, const float* A,
+			 const float* B, const float* C, float* D)
 {
 	cudaEvent_t start, end;
 	float sum = 0.0, tmp;
-	for (int _ = 0; + < OUTER_RUNS; _++)
+	for (int _ = 0; _ < OUTER_RUNS; _++)
 	{
 		cudaEventCreate(&start);
 		cudaEventCreate(&end);
@@ -214,18 +208,26 @@ void __evalute(threeMatrixMulFunc threeMatrixMul, int n, const float *A,
 	printf("%f\n", sum/OUTER_RUNS);
 }
 
-#define evalute(threeMatrixMul, n, A, B, C, D)									\
+#define evaluate(threeMatrixMul, n, A, B, C, D)									\
 	printf("Evalute %s : ", #threeMatrixMul);									\
-	evalute(threeMatrixMul, n, A, B, C, D);										
+	__evaluate(threeMatrixMul, n, A, B, C, D);										
 
 int main(int argc, char const *argv[])
 {
 	cublasStatus_t status;
-	cublasHanlde_t hanlde;
+	cublasHandle_t handle;
 
-	int dev_id = findCudaDevice(argc, (const char **)arv);
+	int n_device = 0;
+	cudaGetDeviceCount(&n_device);
+
+	if (n_device != 1)
+	{
+		fprintf(stderr, "Device count = %d\n", n_device);
+		goto finish;
+	}
+
 	cudaDeviceProp device_prop;
-	checkCudaErrors(cudaGetDeviceProperties(&device_prop, device_id));
+	cudaGetDeviceProperties(&device_prop, 0);
 
 	if ((device_prop.major << 4) + device_prop.minor < 0x35)
 	{
@@ -247,9 +249,9 @@ int main(int argc, char const *argv[])
 	allocate_host_memory(HC, SIZE, chb);
 	allocate_host_memory(HD, SIZE, chc);
 
-	random_fill(HA, n);
-	random_fill(HB, n);
-	random_fill(HC, n);
+	random_fill(HA, SIZE);
+	random_fill(HB, SIZE);
+	random_fill(HC, SIZE);
 
 	float *DA, *DB, *DC, *DD;
 	allocate_device_memory(DA, SIZE, chd);
@@ -262,8 +264,8 @@ int main(int argc, char const *argv[])
 	initialize_device_matrices(HC, DC, SIZE, cdd);
 	initialize_device_matrices(HD, DD, SIZE, cdd);
 
-	evalute(threeMatrixMulV1, N, DA, DB, DC, DD);
-	evalute(threeMatrixMulV2, N, DA, DB, DC, DD);
+	evaluate(threeMatrixMulV1, N, DA, DB, DC, DD);
+	evaluate(threeMatrixMulV2, N, DA, DB, DC, DD);
 
 cdd:free_device_memory(DD, finish);
 cdc:free_device_memory(DC, finish);
@@ -275,7 +277,7 @@ chc:free(HC);
 chb:free(HB);
 cha:free(HA);
 
-chandle:cublasDestory(hanlde);
+chandle:cublasDestroy(handle);
 
 finish:return 0;
 
