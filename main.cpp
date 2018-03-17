@@ -48,7 +48,7 @@ void __close__(int n, const float* v1, const float *v2, float error)
 
 #define EVALUATE(func, n, A, B, C, D, HD, TD) do { \
 	printf("%s :", #func); \
-	__evaluate__(threeMatrixMul, n, A, B, C, D); \
+	__evaluate__(func, n, A, B, C, D); \
 	CHECK_CUDA_CALL(cudaMemcpy(HD, TD, n, cudaMemcpyDeviceToHost)); \
 	__close__(n, HD, TD, 1e5); \
 } while(0)
@@ -92,11 +92,11 @@ int main(int argc, char const *argv[]) {
 
 	int n_device = 0;
 	CHECK_CUDA_CALL(cudaGetDeviceCount(&n_device));
-	ASSERT(n_device == 1, "Only consider one device case");
+	ASSERT_MSG(n_device == 1, "Only consider one device case");
 
 	cudaDeviceProp device_prop;
 	CHECK_CUDA_CALL(cudaGetDeviceProperties(&device_prop, 0));
-	ASSERT((device_prop.major << 4) + device_prop.minor < 0x35,
+	ASSERT_MSG((device_prop.major << 4) + device_prop.minor < 0x35,
 		"Device API is not supported when cc <= 3.5");
 	
 	cublasHandle_t handle;

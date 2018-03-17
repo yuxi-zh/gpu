@@ -4,26 +4,33 @@
 
 #include "stdio.h"
 #include "stdlib.h"
+#include "string.h"
 #include "cublas_v2.h"
 #include "cuda_runtime.h"
 
-#define __CHECK_CALL__(name, call, error_type, success, err2str) do { \
-	if ((error_type error = (call)) != success) { \
-		fprintf(stderr, "[%s-%d] %s(%s) failed for %s \n", \
+#define __CHECK_CALL__(name, call, type, success, err2str) do { \
+	type error; \
+	if ((error = (call)) != success) { \
+		fprintf(stderr, "[%s-%d] CHECK_%s_CALL(%s) failed for %s\n", \
 			__FUNCTION__, __LINE__, #name, #call, err2str(error) \
 		); \
 		exit(0); \
 	} \
 } while(0)
 
-#define ASSERT(stmt, msg) do { \
+#define ASSERT_MSG(stmt, msg) do { \
 	if (!(stmt)) { \
-		fprintf(stderr, "[%s-%d] ASSERT(%s) is failed, %s\n", \
-			__FUNCTION__, __LINE__, #stmt, msg \
+		fprintf(stderr, "[%s-%d] ASSERT(%s) is failed", \
+			__FUNCTION__, __LINE__, #stmt,\
 		); \
+		if (strlen(msg) != 0) \
+			fprintf(stderr, ", %s", msg); \
+		fprintf(stderr, "\n"); \
 		exit(0); \
 	} \
 } while(0)
+
+#define ASSERT(stmt) ASSERT_MSG(stmt, "")
 
 static const char *cublasGetErrorString(cublasStatus_t error)
 {
