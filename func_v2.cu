@@ -14,7 +14,7 @@ void __func_v2__(cublasStatus_t *status, int n, const float* A, const float* B,
 	if (*status != CUBLAS_STATUS_SUCCESS)
 		return;
 
-	T = (float *)malloc(sizeof(float) * SIZE);
+	T = (float *)malloc(sizeof(float) * n * n);
 	if (T == NULL) {
 		*status = CUBLAS_STATUS_ALLOC_FAILED;
 		return;
@@ -41,15 +41,16 @@ void func_v2(int n, const float* A, const float* B, const float* C, float* D)
 	cublasHandle_t handle;
 	CHECK_CUBLAS_CALL(cublasCreate(&handle));
 
+	cublasStatus_t status;
 	cublasStatus_t *dev_status;
-	CHECK_CUBLAS_CALL(cudaMalloc((void **)&dev_status, sizeof(cublasStatus_t)));
+	CHECK_CUDA_CALL(cudaMalloc((void **)&dev_status, sizeof(cublasStatus_t)));
 
-	__func_v2__<<<1, 1>>>(dev_status, N, A, B, C, D);
+	__func_v2__<<<1, 1>>>(dev_status, n, A, B, C, D);
 	CHECK_CUDA_CALL(cudaGetLastError());
 
 	CHECK_CUDA_CALL(cudaMemcpy(&status, dev_status, sizeof(cublasStatus_t), 
 		cudaMemcpyDeviceToHost));
-	ASSERT(status == CUBLAS_STATUS_SUCCESS, "CUBLAS device API call failed")
+	ASSERT_MSG(status == CUBLAS_STATUS_SUCCESS, "CUBLAS device API call failed");
 
 	CHECK_CUDA_CALL(cudaFree(dev_status));
 	CHECK_CUBLAS_CALL(cublasDestroy(handle));

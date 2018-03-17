@@ -21,7 +21,7 @@
 #define ASSERT_MSG(stmt, msg) do { \
 	if (!(stmt)) { \
 		fprintf(stderr, "[%s-%d] ASSERT(%s) is failed", \
-			__FUNCTION__, __LINE__, #stmt,\
+			__FUNCTION__, __LINE__, #stmt\
 		); \
 		if (strlen(msg) != 0) \
 			fprintf(stderr, ", %s", msg); \

@@ -6,7 +6,6 @@
 
 #define N 					(1024)
 #define SIZE 				(N * N)
-#define RAND_MAX			(1e6)
 #define OUTER_RUNS			(50)
 
 inline void random_fill(float *A, int size) {
@@ -86,7 +85,7 @@ void func_v1(int n, const float* A, const float* B, const float* C, float* D)
 }
 
 extern 
-void func_v2(cublasStatus_t*, int, const float*, const float*, const float*, float*);
+void func_v2(int, const float*, const float*, const float*, float*);
 
 int main(int argc, char const *argv[]) {
 
