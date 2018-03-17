@@ -4,7 +4,7 @@
 #include "cublas_v2.h"
 #include "cuda_runtime.h"
 
-#define N 					(1024)
+#define N 					(4096)
 #define SIZE 				(N * N)
 #define OUTER_RUNS			(50)
 
@@ -48,9 +48,10 @@ void __close__(int n, const float* v1, const float *v2, float error)
 #define EVALUATE(func, n, A, B, C, D, HD, TD) do { \
 	printf("%s :", #func); \
 	__evaluate__(func, n, A, B, C, D); \
-	CHECK_CUDA_CALL(cudaMemcpy(HD, TD, n, cudaMemcpyDeviceToHost)); \
-	__close__(n, HD, TD, 1e5); \
 } while(0)
+//	CHECK_CUDA_CALL(cudaMemcpy(HD, TD, n, cudaMemcpyDeviceToHost)); \
+//	__close__(n, HD, TD, 1e5); \
+//} while(0)
 
 void func_v0(int n, const float* A, const float* B, const float* C, float* D) 
 {
@@ -72,7 +73,7 @@ void func_v1(int n, const float* A, const float* B, const float* C, float* D)
 	float *T= NULL, alpha = 1.0f, beta = 0.0f;
 	
 	CHECK_CUBLAS_CALL(cublasCreate(&hanlde));
-	CHECK_CUDA_CALL(cudaMalloc((void **)&T, sizeof(float) * n));
+	CHECK_CUDA_CALL(cudaMalloc((void **)&T, sizeof(float) * n * n));
 
 	CHECK_CUBLAS_CALL(cublasSgemm(
 		hanlde, CUBLAS_OP_N, CUBLAS_OP_N, n, n, n, &alpha, B, n, C, n, &beta, T, n
@@ -95,7 +96,7 @@ int main(int argc, char const *argv[]) {
 
 	cudaDeviceProp device_prop;
 	CHECK_CUDA_CALL(cudaGetDeviceProperties(&device_prop, 0));
-	ASSERT_MSG((device_prop.major << 4) + device_prop.minor < 0x35,
+	ASSERT_MSG((device_prop.major << 4) + device_prop.minor >= 0x35,
 		"Device API is not supported when cc <= 3.5");
 	
 	cublasHandle_t handle;
@@ -112,7 +113,7 @@ int main(int argc, char const *argv[]) {
 	random_fill(HB, SIZE);
 	random_fill(HC, SIZE);
 
-	func_v0(N, HA, HB, HC, TD);
+//	func_v0(N, HA, HB, HC, TD);
 
 	float *DA, *DB, *DC, *DD;
 	CHECK_CUDA_CALL(cudaMalloc((void **)&DA, sizeof(float) * SIZE));

@@ -50,8 +50,8 @@ void func_v2(int n, const float* A, const float* B, const float* C, float* D)
 
 	CHECK_CUDA_CALL(cudaMemcpy(&status, dev_status, sizeof(cublasStatus_t), 
 		cudaMemcpyDeviceToHost));
-	ASSERT_MSG(status == CUBLAS_STATUS_SUCCESS, "CUBLAS device API call failed");
-
+//	ASSERT_MSG(status == CUBLAS_STATUS_SUCCESS, "CUBLAS device API call failed");
+	CHECK_CUBLAS_CALL(status);
 	CHECK_CUDA_CALL(cudaFree(dev_status));
 	CHECK_CUBLAS_CALL(cublasDestroy(handle));
 }
