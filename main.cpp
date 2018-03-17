@@ -1,8 +1,13 @@
+#include "utils.h"
+#include "stdio.h"
+#include "stdlib.h"
 #include "cublas_v2.h"
+#include "cuda_runtime.h"
 
 #define N 					(1024)
 #define SIZE 				(N * N)
 #define RAND_MAX			(1e6)
+#define OUTER_RUNS			(50)
 
 inline void random_fill(float *A, int size) {
 	for (int i = 0; i < size; ++i)
@@ -21,7 +26,7 @@ void __evaluate__(funcType func,
 		CHECK_CUDA_CALL(cudaEventCreate(&start));
 		CHECK_CUDA_CALL(cudaEventCreate(&end));
 		CHECK_CUDA_CALL(cudaEventRecord(start, 0));
-		threeMatrixMul(n, A, B, C, D);
+		func(n, A, B, C, D);
 		CHECK_CUDA_CALL(cudaEventRecord(end, 0));
 		CHECK_CUDA_CALL(cudaEventSynchronize(end));
 		CHECK_CUDA_CALL(cudaEventElapsedTime(&tmp, start, end));
@@ -45,7 +50,7 @@ void __close__(int n, const float* v1, const float *v2, float error)
 	printf("%s :", #func); \
 	__evaluate__(threeMatrixMul, n, A, B, C, D); \
 	CHECK_CUDA_CALL(cudaMemcpy(HD, TD, n, cudaMemcpyDeviceToHost)); \
-	__close__(n, HD, TD, 1e5) \
+	__close__(n, HD, TD, 1e5); \
 } while(0)
 
 void func_v0(int n, const float* A, const float* B, const float* C, float* D) 
