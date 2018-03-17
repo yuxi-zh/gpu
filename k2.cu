@@ -1,13 +1,15 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "errno.h"
+#include "string.h"
 
 #include "cuda_runtime.h"
 #include "cublas_v2.h"
 #include "helper_cuda.h"
-#include "cooperative_groups.h"
 
-using namespace cooperative_groups;
+#define N 			(1024)
+#define SIZE 		(N * N)
+#define OUTER_RUNS	(50)
 
 #define allocate_host_memory(name, size, errhanlde) 							\
 	float *name = (float *)malloc(sizeof(float) * size); 						\
@@ -62,106 +64,159 @@ void threeMatrixMulV0(int n, const float *A, const float *B,
 	}
 }
 
-void threeMatrixMulV1(int n, const float *A, const float *B, 
+void threeMatrixMulV1(cublasStatus_t *returnValue, int n, 
+						const float *A, const float *B, 
 						const float *C, const float *D)
 {
 	cublasHanlde_t hanlde;
 	cublasStatus_t status = cublasCreate(&hanlde);
 
+	if (status != CUBLAS_STATUS_SUCCESS)
+		goto clean_handle;
+
 	float *DT;
-	allocate_device_memory(DT, SIZE, finish);
+	allocate_device_memory(DT, SIZE, clean_handle);
 
 	status = cublasSgemm(
 		hanlde, CUBLAS_OP_N, CUBLAS_OP_N, n, n, n, 1.0f, B, n, C, n, 0.0f, T, n
 	);
 	if (status != CUBLAS_STATUS_SUCCESS)
-		goto finish;
+		goto clean_t;
 
 	status = cublasSgemm(
 		hanlde, CUBLAS_OP_N, CUBLAS_OP_N, n, n, n, 1.0f, A, n, T, n, 0.0f, D, n
 	);
 	if (status != CUBLAS_STATUS_SUCCESS)
-		goto finish;
+		goto clean_t;
 
-finish:
+clean_t:
+	free_device_memory(DT);
+
+clean_handle:
 	cublasDestory(hanlde);
+
+	*returnValue = status;
 }
 
-__global__ void threeMatrixMulV2(cublasStatus_t *returnValue, int n,
+__global__ void __threeMatrixMulV2(cublasStatus_t *returnValue, int n,
 									const float *A, const float *B,
-									const float *C, const float *D,
-									const float *T)
+									const float *C, const float *D)
 {
 	cublasHanlde_t hanlde;
 	cublasStatus_t status = cublasCreate(&hanlde);
 
 	if (status != CUBLAS_STATUS_SUCCESS)
-		goto finish;
+		goto clean_handle;
+
+	float *T = (float *)malloc(sizeof(float) * SIZE);
+	if (T == nullptr)
+		goto clean_handle;
 
 	status = cublasSgemm(
 		hanlde, CUBLAS_OP_N, CUBLAS_OP_N, n, n, n, 1.0f, B, n, C, n, 0.0f, T, n
 	);
 	if (status != CUBLAS_STATUS_SUCCESS)
-		goto finish;
+		goto clean_t;
 
 	status = cublasSgemm(
 		hanlde, CUBLAS_OP_N, CUBLAS_OP_N, n, n, n, 1.0f, A, n, T, n, 0.0f, D, n
 	);
 	if (status != CUBLAS_STATUS_SUCCESS)
-		goto finish;
+		goto clean_t;
 
+clean_t:
+	free(T);
 
-finish:
+clean_handle:
 	cublasDestory(hanlde);
+
 	*returnValue = status;
 }
 
-__device__ void twoMatrixMul(float* __restrict__ A, float* __restrict__ B,
-								float* __restrict__ C)
+void threeMatrixMulV2(int n, const float *A, const float *B, 
+						const float *C, const float *D)
 {
+	cublasStatus_t status;
+	cublasHanlde_t handle;
 
-  __shared__ float A_shared[1024];
-  __shared__ float B_shared[1024];
+	status = cublasCreate(&handle);
+	if (status != CUBLAS_STATUS_SUCCESS)
+	{
+		fprintf(stderr, "CUBLAS initialization failed\n");
+		goto finish;
+	}
 
-  for (int dx_inner_outer_init = 0; dx_inner_outer_init < 4; ++dx_inner_outer_init) {
-    for (int dy_inner_outer_init = 0; dy_inner_outer_init < 4; ++dy_inner_outer_init) {
-      C[(((((((((int)blockIdx.x) * 1024) + ((int)blockIdx.y)) + (((int)threadIdx.x) * 16)) * 64) + ((int)threadIdx.y)) + (dx_inner_outer_init * 16384)) + (dy_inner_outer_init * 16))] = 0.000000e+00f;
-    }
-  }
-  
-  for (int k_outer = 0; k_outer < 64; ++k_outer) {
-    __syncthreads();
-    
-    for (int ax0_outer = 0; ax0_outer < 4; ++ax0_outer) {
-      A_shared[(((((int)threadIdx.x) * 16) + ((int)threadIdx.y)) + (ax0_outer * 256))] = A[((((((((int)blockIdx.x) * 64) + ((int)threadIdx.x)) * 1024) + ((int)threadIdx.y)) + (k_outer * 16)) + (ax0_outer * 16384))];
-    }
+	cublasStatus_t *dev_status;
+	allocate_device_memory(dev_status, 1, cds);		
 
-    for (int ax1_outer = 0; ax1_outer < 4; ++ax1_outer) {
-      B_shared[(((((int)threadIdx.x) * 64) + ((int)threadIdx.y)) + (ax1_outer * 16))] = B[(((((((int)blockIdx.y) + (((int)threadIdx.x) * 16)) * 64) + ((int)threadIdx.y)) + (k_outer * 16384)) + (ax1_outer * 16))];
-    }
-    __syncthreads();
-    
-    for (int k_inner = 0; k_inner < 16; ++k_inner) {
-      for (int dx_inner_outer = 0; dx_inner_outer < 4; ++dx_inner_outer) {
-        for (int dy_inner_outer = 0; dy_inner_outer < 4; ++dy_inner_outer) {
-          C[(((((((((int)blockIdx.x) * 1024) + ((int)blockIdx.y)) + (((int)threadIdx.x) * 16)) * 64) + ((int)threadIdx.y)) + (dx_inner_outer * 16384)) + (dy_inner_outer * 16))] = (C[(((((((((int)blockIdx.x) * 1024) + ((int)blockIdx.y)) + (((int)threadIdx.x) * 16)) * 64) + ((int)threadIdx.y)) + (dx_inner_outer * 16384)) + (dy_inner_outer * 16))] + (A_shared[(((((int)threadIdx.x) * 16) + k_inner) + (dx_inner_outer * 256))] * B_shared[((((int)threadIdx.y) + (k_inner * 64)) + (dy_inner_outer * 16))]));
-        }
-      }
-    }
-  }
+	threeMatrixMulCuda8<<<1, 1>>>(dev_status, N, DA, DB, DC, DD);
+
+	cudaError_t error;
+	if ((error = cudaGetLastError()) != cudaSuccess)
+	{
+		fprintf(stderr, "cuda kernel execution failed: %s\n",
+			cudaGetErrorString(error));
+		goto cds;
+	}
+
+	if ((error = cudaMemCpy(&status, dev_status, sizeof(cublasStatus_t),
+		cudaMemcpyDeviceToHost)) != cudaSuccess)
+	{
+		fprintf(stderr, "Device to host memory copy failed: %s\n",
+			cudaGetLastError(error));
+		goto cds;
+	}
+
+	if (status != CUBLAS_STATUS_SUCCESS)
+	{
+		fprintf(stderr, "CUBLAS device API call failed: %d\n", status);
+		goto cds;
+	}
+
+	if ((error = cudaMemCpy(&HD, DD, sizeof(float) * SIZE,
+		cudaMemcpyDeviceToHost)) != cudaSuccess)
+	{
+		fprintf(stderr, "Device to host memory copy failed: %s\n",
+			cudaGetLastError(error));
+		goto cds;
+	}
+
+cds:free_device_memory(dev_status, finish);
+
+chandle:cublasDestory(hanlde);
+
+finish:return;
+
 }
 
-__global__ void threeMatrixMulV3(int n, const float *A, const float *B,
-									const float *C, const float *D, const float *T)
+typedef void (*threeMatrixMulFunc)(int, const float, const float,
+									const float, const float);
+
+void __evalute(threeMatrixMulFunc threeMatrixMul, int n, const float *A,
+				const float *B, const float *C, const float *D)
 {
-	grid_group grid = this_grid();
+	cudaEvent_t start, end;
+	float sum = 0.0, tmp;
+	for (int _ = 0; + < OUTER_RUNS; _++)
+	{
+		cudaEventCreate(&start);
+		cudaEventCreate(&end);
+		cudaEventRecord(start, 0);
+		threeMatrixMul(n, A, B, C, D);
+		cudaEventRecord(end, 0);
+		cudaEventSynchronize(end);
+		cudaEventElapsedTime(&tmp, start, end);
+		cudaEventDestroy(start);
+		cudaEventDestroy(end);
+		sum += tmp * 1000.0;
+	}
 
-	twoMatrixMul(n, B, C, T);
-
-	grid.sync();
-
-	twoMatrixMul(n, A, T, D);
+	printf("%f\n", sum/OUTER_RUNS);
 }
+
+#define evalute(threeMatrixMul, n, A, B, C, D)									\
+	printf("Evalute %s : ", #threeMatrixMul);									\
+	evalute(threeMatrixMul, n, A, B, C, D);										
 
 int main(int argc, char const *argv[])
 {
@@ -178,67 +233,50 @@ int main(int argc, char const *argv[])
 		goto finish;
 	}
 
+	status = cublasCreate(&handle);
+
+    if (status != CUBLAS_STATUS_SUCCESS)
+    {
+        fprintf(stderr, "!!!! CUBLAS initialization error\n");
+        goto chandle;
+    }
+
 	float *HA, *HB, *HC, *HD;
 	allocate_host_memory(HA, SIZE, finish);
-	allocate_host_memory(HB, SIZE, finish);
-	allocate_host_memory(HC, SIZE, finish);
-	allocate_host_memory(HD, SIZE, finish);
+	allocate_host_memory(HB, SIZE, cha);
+	allocate_host_memory(HC, SIZE, chb);
+	allocate_host_memory(HD, SIZE, chc);
 
 	random_fill(HA, n);
 	random_fill(HB, n);
 	random_fill(HC, n);
 
 	float *DA, *DB, *DC, *DD;
-	allocate_device_memory(DA, SIZE, finish);
-	allocate_device_memory(DB, SIZE, finish);
-	allocate_device_memory(DC, SIZE, finish);
-	allocate_device_memory(DD, SIZE, finish);
+	allocate_device_memory(DA, SIZE, chd);
+	allocate_device_memory(DB, SIZE, cda);
+	allocate_device_memory(DC, SIZE, cdb);
+	allocate_device_memory(DD, SIZE, cdc);
 
-	initialize_device_matrices(HA, DA, SIZE, finish);
-	initialize_device_matrices(HB, DB, SIZE, finish);
-	initialize_device_matrices(HC, DC, SIZE, finish);
-	initialize_device_matrices(HD, DD, SIZE, finish);
+	initialize_device_matrices(HA, DA, SIZE, cdd);
+	initialize_device_matrices(HB, DB, SIZE, cdd);
+	initialize_device_matrices(HC, DC, SIZE, cdd);
+	initialize_device_matrices(HD, DD, SIZE, cdd);
 
-	cublasStatus_t *dev_status;
-	allocate_device_memory(dev_status, 1, finish);		
+	evalute(threeMatrixMulV1, N, DA, DB, DC, DD);
+	evalute(threeMatrixMulV2, N, DA, DB, DC, DD);
 
-	threeMatrixMulCuda8<<<1, 1>>>(dev_status, N, DA, DB, DC, DD);
+cdd:free_device_memory(DD, finish);
+cdc:free_device_memory(DC, finish);
+cdb:free_device_memory(DB, finish);
+cda:free_device_memory(DA, finish);
 
-	cudaError_t error;
-	if ((error = cudaGetLastError()) != cudaSuccess)
-	{
-		fprintf(stderr, "cuda kernel execution failed: %s\n",
-			cudaGetErrorString(error));
-		goto finish;
-	}
+chd:free(HD);
+chc:free(HC);
+chb:free(HB);
+cha:free(HA);
 
-	if ((error = cudaMemCpy(&status, dev_status, sizeof(cublasStatus_t),
-		cudaMemcpyDeviceToHost)) != cudaSuccess)
-	{
-		fprintf(stderr, "Device to host memory copy failed: %s\n",
-			cudaGetLastError(error));
-		goto finish;
-	}
+chandle:cublasDestory(hanlde);
 
-	if (status != CUBLAS_STATUS_SUCCESS)
-	{
-		fprintf(stderr, "CUBLAS device API call failed: %d\n", status);
-		goto finish;
-	}
+finish:return 0;
 
-	if ((error = cudaMemCpy(&HD, DD, sizeof(float) * SIZE,
-		cudaMemcpyDeviceToHost)) != cudaSuccess)
-	{
-		fprintf(stderr, "Device to host memory copy failed: %s\n",
-			cudaGetLastError(error));
-		goto finish;
-	}
-
-	free_device_memory(dev_status, finish);
-	free_device_memory(DA, finish);
-	free_device_memory(DB, finish);
-	free_device_memory(DC, finish);
-	free_device_memory(DD, finish);
-
-	return 0;
 }
