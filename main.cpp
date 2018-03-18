@@ -85,8 +85,8 @@ void func_v1(int n, const float* A, const float* B, const float* C, float* D)
 	CHECK_CUBLAS_CALL(cublasDestroy(hanlde));
 }
 
-extern 
-void func_v2(int, const float*, const float*, const float*, float*);
+extern void func_v2(int, const float*, const float*, const float*, float*);
+extern void func_v3(int, const float*, const float*, const float*, float*);
 
 int main(int argc, char const *argv[]) {
 
@@ -99,6 +99,7 @@ int main(int argc, char const *argv[]) {
 	ASSERT_MSG((device_prop.major << 4) + device_prop.minor >= 0x35,
 		"Device API is not supported when cc <= 3.5");
 	
+
 	cublasHandle_t handle;
 	CHECK_CUBLAS_CALL(cublasCreate(&handle));
 
@@ -127,6 +128,7 @@ int main(int argc, char const *argv[]) {
 
 	EVALUATE(func_v1, N, DA, DB, DC, DD, HD, TD);
 	EVALUATE(func_v2, N, DA, DB, DC, DD, HD, TD);
+	EVALUATE(func_v3, N, DA, DB, DC, DD, HD, TD);
 
 	CHECK_CUDA_CALL(cudaFree(DA));
 	CHECK_CUDA_CALL(cudaFree(DB));

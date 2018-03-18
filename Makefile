@@ -250,19 +250,19 @@ else
 	@echo "Sample is ready - all dependencies have been met"
 endif
 
-func_v2.o:func_v2.cu
+%.o:%.cu
 	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
 
 main.o:main.cpp
 	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ -c $<
 
-main: func_v2.o main.o
+main: mm_1024_1024_1024_16_16_16.cu func_v3.o func_v2.o main.o
 	$(EXEC) $(NVCC) $(ALL_LDFLAGS) $(GENCODE_FLAGS) -o $@ $+ $(LIBRARIES)
 
 run: build
 	$(EXEC) ./main
 
 clean:
-	rm -f main func_v2.o main.o
+	rm -f main *.o
 
 clobber: clean

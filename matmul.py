@@ -14,11 +14,12 @@ schedule = tvm.create_schedule(C.op)
 lower_func = tvm.lower(schedule, [A, B, C], simple_mode=True)
 print(lower_func)
 
-BX = 64
-BY = 64
 TX = 16
 TY = 16
 SK = 16
+
+BX = M / TX
+BY = N / TY
 
 blk_x = tvm.thread_axis("blockIdx.x")
 blk_y = tvm.thread_axis("blockIdx.y")
@@ -49,6 +50,8 @@ asyo, asyi = schedule[AS].split(asy, factor=TY)
 schedule[AS].reorder(asxi, asyi, asxo, asyo)
 schedule[AS].bind(asxi, thd_x)
 schedule[AS].bind(asyi, thd_y)
+asxyo = schedule[AS].fuse(asxo, asyo)
+schedule[AS].unroll(asxyo)
 
 BS = schedule.cache_read(B, 'shared', [C])
 schedule[BS].compute_at(schedule[C], ko)
@@ -58,6 +61,8 @@ bsyo, bsyi = schedule[BS].split(bsy, factor=TY)
 schedule[BS].reorder(bsxi, bsyi, bsxo, bsyo)
 schedule[BS].bind(bsxi, thd_x)
 schedule[BS].bind(bsyi, thd_y)
+bsxyo = schedule[BS].fuse(bsxo, bsyo)
+schedule[BS].unroll(bsxyo)
 
 # AL = schedule.cache_read(AS, 'local', [C])
 # schedule[AL].compute_at(schedule[C], ki)
@@ -65,8 +70,10 @@ schedule[BS].bind(bsyi, thd_y)
 # BL = schedule.cache_read(BS, 'local', [C])
 # schedule[BL].compute_at(schedule[C], ki)
 
-lower_func = tvm.lower(schedule, [A, B, C], simple_mode=True)
-print(lower_func)
+# lower_func = tvm.lower(schedule, [A, B, C], simple_mode=True)
+# print(lower_func)
 
-build_func = tvm.build(schedule, [A, B, C], target='cuda', name="matmul")
+build_func = tvm.build(schedule, [A, B, C], target='cuda', name="mm")
 print(build_func.imported_modules[0].get_source())
+with open('mm_{}_{}_{}_{}_{}_{}.cu'.format(M, K, N, TX, TY, SK),'w') as source:
+	source.write(build_func.imported_modules[0].get_source())
