@@ -106,6 +106,6 @@ high = 1024
 a = tvm.nd.array(np.random.uniform(high=high, size=M*K).astype(A.dtype).reshape((M,K)), ctx)
 b = tvm.nd.array(np.random.uniform(high=high, size=K*L).astype(B.dtype).reshape((K,L)), ctx)
 c = tvm.nd.array(np.random.uniform(high=high, size=L*N).astype(C.dtype).reshape((L,N)), ctx)
-d = tvm.nd.array(np.zeros(M,N, dtype=D.dtype).reshape((M,N)), ctx)
+d = tvm.nd.array(np.zeros((M,N)).astype(D.dtype).reshape((M,N)), ctx)
 evaluator = build_func.time_evaluator(build_func.entry_name, ctx, number=1)
 print('time: %f ms' % (evaluator(a, b, c, d).mean * 1e3))

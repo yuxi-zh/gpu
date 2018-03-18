@@ -4,7 +4,7 @@
 #include "cublas_v2.h"
 #include "cuda_runtime.h"
 
-#define N 					(4096)
+#define N 					(1024)
 #define SIZE 				(N * N)
 #define OUTER_RUNS			(50)
 
@@ -86,7 +86,7 @@ void func_v1(int n, const float* A, const float* B, const float* C, float* D)
 }
 
 extern void func_v2(int, const float*, const float*, const float*, float*);
-extern void func_v3(int, const float*, const float*, const float*, float*);
+//extern void func_v3(int, const float*, const float*, const float*, float*);
 
 int main(int argc, char const *argv[]) {
 
@@ -128,7 +128,7 @@ int main(int argc, char const *argv[]) {
 
 	EVALUATE(func_v1, N, DA, DB, DC, DD, HD, TD);
 	EVALUATE(func_v2, N, DA, DB, DC, DD, HD, TD);
-	EVALUATE(func_v3, N, DA, DB, DC, DD, HD, TD);
+//	EVALUATE(func_v3, N, DA, DB, DC, DD, HD, TD);
 
 	CHECK_CUDA_CALL(cudaFree(DA));
 	CHECK_CUDA_CALL(cudaFree(DB));
