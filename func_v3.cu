@@ -7,7 +7,7 @@
 #define BLOCK_DIM_X		(16)
 #define BLOCK_DIM_Y		(16)
 
-extern __device__ void mm_kernel0(int n, const float* A, const float* B, const float *C); 
+extern __device__ void mm_kernel0(float *C, const float* A, const float* B); 
 
 __device__ int syncCount = 0;
 

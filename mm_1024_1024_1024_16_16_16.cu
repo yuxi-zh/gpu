@@ -1,4 +1,4 @@
-extern "C" __device__ void mm__kernel0(float* __restrict__ C, const float* __restrict__ A, const float* __restrict__ B) {
+extern "C" __global__ void mm__kernel0( float* __restrict__ C,  float* __restrict__ A,  float* __restrict__ B) {
   __shared__ float A_shared[1024];
   __shared__ float B_shared[1024];
   C[(((((((int)blockIdx.x) * 1024) + ((int)blockIdx.y)) + (((int)threadIdx.x) * 16)) * 64) + ((int)threadIdx.y))] = 0.000000e+00f;
