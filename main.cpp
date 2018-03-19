@@ -4,8 +4,8 @@
 #include "cublas_v2.h"
 #include "cuda_runtime.h"
 
-#define N 					(1024)
-#define SIZE 				(N * N)
+// #define N 					(1024)
+// #define SIZE 				(N * N)
 #define OUTER_RUNS			(50)
 
 inline void random_fill(float *A, int size) {
@@ -98,47 +98,58 @@ int main(int argc, char const *argv[]) {
 	CHECK_CUDA_CALL(cudaGetDeviceProperties(&device_prop, 0));
 	ASSERT_MSG((device_prop.major << 4) + device_prop.minor >= 0x35,
 		"Device API is not supported when cc <= 3.5");
-	
 
 	cublasHandle_t handle;
 	CHECK_CUBLAS_CALL(cublasCreate(&handle));
 
-	float *HA, *HB, *HC, *HD, *TD;
-	ASSERT((HA = (float *)malloc(sizeof(float) * SIZE)) != NULL);
-	ASSERT((HB = (float *)malloc(sizeof(float) * SIZE)) != NULL);
-	ASSERT((HC = (float *)malloc(sizeof(float) * SIZE)) != NULL);
-	ASSERT((HD = (float *)malloc(sizeof(float) * SIZE)) != NULL);
-	ASSERT((TD = (float *)malloc(sizeof(float) * SIZE)) != NULL);
+	int N = 1024;
 
-	random_fill(HA, SIZE);
-	random_fill(HB, SIZE);
-	random_fill(HC, SIZE);
+	for (int i = 0; i < 4; ++i)
+	{
+		N = N + i * 1024;
+		int SIZE = N * N;
 
-//	func_v0(N, HA, HB, HC, TD);
+		CHECK_CUDA_CALL(
+			cudaDeviceSetLimit(cudaLimitMallocHeapSize, SIZE * sizeof(float)));
+		printf("N = %d\n", N); 
 
-	float *DA, *DB, *DC, *DD;
-	CHECK_CUDA_CALL(cudaMalloc((void **)&DA, sizeof(float) * SIZE));
-	CHECK_CUDA_CALL(cudaMalloc((void **)&DB, sizeof(float) * SIZE));
-	CHECK_CUDA_CALL(cudaMalloc((void **)&DC, sizeof(float) * SIZE));
-	CHECK_CUDA_CALL(cudaMalloc((void **)&DD, sizeof(float) * SIZE));
+		float *HA, *HB, *HC, *HD, *TD;
+		ASSERT((HA = (float *)malloc(sizeof(float) * SIZE)) != NULL);
+		ASSERT((HB = (float *)malloc(sizeof(float) * SIZE)) != NULL);
+		ASSERT((HC = (float *)malloc(sizeof(float) * SIZE)) != NULL);
+		ASSERT((HD = (float *)malloc(sizeof(float) * SIZE)) != NULL);
+		ASSERT((TD = (float *)malloc(sizeof(float) * SIZE)) != NULL);
 
-	CHECK_CUBLAS_CALL(cublasSetVector(SIZE, sizeof(float), HA, 1, DA, 1));
-	CHECK_CUBLAS_CALL(cublasSetVector(SIZE, sizeof(float), HB, 1, DB, 1));
-	CHECK_CUBLAS_CALL(cublasSetVector(SIZE, sizeof(float), HC, 1, DC, 1));
+		random_fill(HA, SIZE);
+		random_fill(HB, SIZE);
+		random_fill(HC, SIZE);
 
-	EVALUATE(func_v1, N, DA, DB, DC, DD, HD, TD);
-	EVALUATE(func_v2, N, DA, DB, DC, DD, HD, TD);
-//	EVALUATE(func_v3, N, DA, DB, DC, DD, HD, TD);
+	//	func_v0(N, HA, HB, HC, TD);
 
-	CHECK_CUDA_CALL(cudaFree(DA));
-	CHECK_CUDA_CALL(cudaFree(DB));
-	CHECK_CUDA_CALL(cudaFree(DC));
-	CHECK_CUDA_CALL(cudaFree(DD));
-	
-	free(HA);
-	free(HB);
-	free(HC);
-	free(HD);
+		float *DA, *DB, *DC, *DD;
+		CHECK_CUDA_CALL(cudaMalloc((void **)&DA, sizeof(float) * SIZE));
+		CHECK_CUDA_CALL(cudaMalloc((void **)&DB, sizeof(float) * SIZE));
+		CHECK_CUDA_CALL(cudaMalloc((void **)&DC, sizeof(float) * SIZE));
+		CHECK_CUDA_CALL(cudaMalloc((void **)&DD, sizeof(float) * SIZE));
+
+		CHECK_CUBLAS_CALL(cublasSetVector(SIZE, sizeof(float), HA, 1, DA, 1));
+		CHECK_CUBLAS_CALL(cublasSetVector(SIZE, sizeof(float), HB, 1, DB, 1));
+		CHECK_CUBLAS_CALL(cublasSetVector(SIZE, sizeof(float), HC, 1, DC, 1));
+
+		EVALUATE(func_v1, N, DA, DB, DC, DD, HD, TD);
+		EVALUATE(func_v2, N, DA, DB, DC, DD, HD, TD);
+	//	EVALUATE(func_v3, N, DA, DB, DC, DD, HD, TD);
+
+		CHECK_CUDA_CALL(cudaFree(DA));
+		CHECK_CUDA_CALL(cudaFree(DB));
+		CHECK_CUDA_CALL(cudaFree(DC));
+		CHECK_CUDA_CALL(cudaFree(DD));
+		
+		free(HA);
+		free(HB);
+		free(HC);
+		free(HD);
+	}
 
 	CHECK_CUBLAS_CALL(cublasDestroy(handle));
 
