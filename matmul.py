@@ -1,4 +1,5 @@
 import tvm
+import numpy as np
 
 M = 1024
 K = 1024
@@ -28,19 +29,22 @@ thd_y = tvm.thread_axis((0, TY), "threadIdx.y")
 
 cxo, cyo, cxi, cyi = schedule[C].tile(C.op.axis[0], C.op.axis[1], BX, BY)
 ko, ki = schedule[C].split(k, factor=SK)
-
+cxi, cxii = schedule[C].split(cxi, nparts=BX/TX)
+cyi, cyii = schedule[C].split(cyi, nparts=BY/TY)
+cxiii, cxii = schedule[C].split(cxii, factor=TX)
+cyiii, cyii = schedule[C].split(cyii, factor=TY)
+schedule[C].reorder(cxo, cyo, cxi, cyi, cxii, cyii, ko, ki, cxiii, cyiii)
+vthd_x = tvm.thread_axis((0, BX/TX), "vthread", name="vx")
+vthd_y = tvm.thread_axis((0, BY/TY), "vthread", name="vy")
 schedule[C].bind(cxo, blk_x)
 schedule[C].bind(cyo, blk_y)
-
-cxi, cxii = schedule[C].split(cxi, factor=TX)
-cyi, cyii = schedule[C].split(cyi, factor=TY)
-schedule[C].reorder(cxo, cyo, cxii, cyii, ko, ki, cxi, cyi)
-
+schedule[C].bind(cxi, vthd_x)
+schedule[C].bind(cyi, vthd_y)
 schedule[C].bind(cxii, thd_x)
 schedule[C].bind(cyii, thd_y)
 
-cxyi = schedule[C].fuse(cxi, cyi)
-schedule[C].unroll(cxyi)
+# cxyi = schedule[C].fuse(cxi, cyi)
+# schedule[C].unroll(cxyi)
 
 AS = schedule.cache_read(A, 'shared', [C])
 schedule[AS].compute_at(schedule[C], ko)
@@ -64,16 +68,19 @@ schedule[BS].bind(bsyi, thd_y)
 bsxyo = schedule[BS].fuse(bsxo, bsyo)
 schedule[BS].unroll(bsxyo)
 
-# AL = schedule.cache_read(AS, 'local', [C])
-# schedule[AL].compute_at(schedule[C], ki)
+AL = schedule.cache_read(AS, 'local', [C])
+schedule[AL].compute_at(schedule[C], ki)
 
-# BL = schedule.cache_read(BS, 'local', [C])
-# schedule[BL].compute_at(schedule[C], ki)
+BL = schedule.cache_read(BS, 'local', [C])
+schedule[BL].compute_at(schedule[C], ki)
 
-# lower_func = tvm.lower(schedule, [A, B, C], simple_mode=True)
-# print(lower_func)
+lower_func = tvm.lower(schedule, [A, B, C], simple_mode=True)
+print(lower_func)
 
-build_func = tvm.build(schedule, [A, B, C], target='cuda', name="mm")
-print(build_func.imported_modules[0].get_source())
-with open('mm_{}_{}_{}_{}_{}_{}.cu'.format(M, K, N, TX, TY, SK),'w') as source:
-	source.write(build_func.imported_modules[0].get_source())
+ctx = tvm.context("cuda", 0)
+high = 1024
+a = tvm.nd.array(np.random.uniform(high=high, size=M*K).astype(A.dtype).reshape((M,K)), ctx)
+b = tvm.nd.array(np.random.uniform(high=high, size=K*N).astype(B.dtype).reshape((K,N)), ctx)
+d = tvm.nd.array(np.zeros((M,N)).astype(D.dtype).reshape((M,N)), ctx)
+evaluator = build_func.time_evaluator(build_func.entry_name, ctx, number=1)
+print('time: %f ms' % (evaluator(a, b, c, d).mean * 1e3))
