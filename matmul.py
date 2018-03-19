@@ -77,10 +77,13 @@ schedule[BL].compute_at(schedule[C], ki)
 lower_func = tvm.lower(schedule, [A, B, C], simple_mode=True)
 print(lower_func)
 
+build_func = tvm.build(schedule, [A, B, C], target='cuda', name='matmul')
+print(build_func.imported_modules[0].get_source())
+
 ctx = tvm.context("cuda", 0)
 high = 1024
 a = tvm.nd.array(np.random.uniform(high=high, size=M*K).astype(A.dtype).reshape((M,K)), ctx)
 b = tvm.nd.array(np.random.uniform(high=high, size=K*N).astype(B.dtype).reshape((K,N)), ctx)
-d = tvm.nd.array(np.zeros((M,N)).astype(D.dtype).reshape((M,N)), ctx)
-evaluator = build_func.time_evaluator(build_func.entry_name, ctx, number=1)
-print('time: %f ms' % (evaluator(a, b, c, d).mean * 1e3))
+c = tvm.nd.array(np.zeros((M,N)).astype(C.dtype).reshape((M,N)), ctx)
+evaluator = build_func.time_evaluator(build_func.entry_name, ctx, number=50)
+print('time: %f ms' % (evaluator(a, b, c).mean * 1e3))
