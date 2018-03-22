@@ -1,5 +1,17 @@
+import os
 import tvm
 import numpy as np
+
+def write_code(code, fname):
+    with open(fname, "w") as f:
+        f.write(code)
+
+@tvm.register_func
+def tvm_callback_cuda_postproc(code):
+    if not os.path.exists("perf"):
+        os.mkdir("perf")
+    write_code(code, "perf/%s_generated.cu" % 'matmul')
+    return code
 
 M = 1024
 K = 1024
@@ -75,15 +87,18 @@ BL = schedule.cache_read(BS, 'local', [C])
 schedule[BL].compute_at(schedule[C], ki)
 
 lower_func = tvm.lower(schedule, [A, B, C], simple_mode=True)
-print(lower_func)
+# print(lower_func)
+# tvm.save_json(lower_func)
+# print(type(lower_func))
 
-build_func = tvm.build(schedule, [A, B, C], target='cuda', name='matmul')
-print(build_func.imported_modules[0].get_source())
+with tvm.build_config(dump_pass_ir=True) as cfg:
+	build_func = tvm.build(schedule, [A, B, C], target='cuda -mattr=output_device', name='matmul')
+	print(build_func.imported_modules[0].get_source())
 
-ctx = tvm.context("cuda", 0)
-high = 1024
-a = tvm.nd.array(np.random.uniform(high=high, size=M*K).astype(A.dtype).reshape((M,K)), ctx)
-b = tvm.nd.array(np.random.uniform(high=high, size=K*N).astype(B.dtype).reshape((K,N)), ctx)
-c = tvm.nd.array(np.zeros((M,N)).astype(C.dtype).reshape((M,N)), ctx)
-evaluator = build_func.time_evaluator(build_func.entry_name, ctx, number=50)
-print('time: %f ms' % (evaluator(a, b, c).mean * 1e3))
+# ctx = tvm.context("cuda", 0)
+# high = 1024
+# a = tvm.nd.array(np.random.uniform(high=high, size=M*K).astype(A.dtype).reshape((M,K)), ctx)
+# b = tvm.nd.array(np.random.uniform(high=high, size=K*N).astype(B.dtype).reshape((K,N)), ctx)
+# c = tvm.nd.array(np.zeros((M,N)).astype(C.dtype).reshape((M,N)), ctx)
+# evaluator = build_func.time_evaluator(build_func.entry_name, ctx, number=50)
+# print('time: %f ms' % (evaluator(a, b, c).mean * 1e3))
