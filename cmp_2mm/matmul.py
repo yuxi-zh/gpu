@@ -8,7 +8,7 @@ import numpy as np
 TASK="gemm"
 USE_MANUAL_CODE = False
 
-@tvm.register_func
+# @tvm.register_func
 def tvm_callback_cuda_compile(code):
     ptx =  nvcc.compile_cuda(code, target="ptx")
     return ptx
@@ -17,7 +17,7 @@ def write_code(code, fname):
     with open(fname, "w") as f:
         f.write(code)
 
-@tvm.register_func
+# @tvm.register_func
 def tvm_callback_cuda_postproc(code):
     if not os.path.exists("perf"):
         os.mkdir("perf")
@@ -119,7 +119,6 @@ def gemm(m, n, l,
     def check():
         # lower_func = tvm.lower(s, [A, B, C], simple_mode=True)
         f = tvm.build(s, [A, B, C], 'cuda')
-        
         ctx = tvm.context('cuda', 0)
         ashape = (m, l) if not transa else (l, m)
         bshape = (l, n) if not transb else (n, l)
@@ -128,13 +127,14 @@ def gemm(m, n, l,
         a = tvm.nd.array(a_np, ctx)
         b = tvm.nd.array(b_np, ctx)
         c = tvm.nd.array(np.zeros((m, n), dtype=C.dtype), ctx)
+        f(a, b, c)
         lhs = a_np if not transa else a_np.T
         rhs = b_np if not transb else b_np.T
         np.testing.assert_allclose(c.asnumpy(), np.dot(lhs, rhs), rtol=1e-5)
-        timer_f = f.time_evaluator(f.entry_name, ctx, number=50)
+        timer_f = f.time_evaluator(f.entry_name, ctx, number=100)
         t = timer_f(a, b, c).mean
         GFLOPS = (2 * m * n * l) / (t * 1e3) / 1e6
-        print(transa, transb, '%4d %4d %4d %f %f' % (m, n, l, t, GFLOPS))
+        print('%s\t%s\t%4d\t%4d\t%4d\t%.8g\t%g' % (transa, transb, m, n, l, t * 1e3, GFLOPS))
 
     with tvm.build_config(auto_unroll_max_step=128, unroll_explicit=False):
         check()
@@ -145,10 +145,10 @@ if __name__ == "__main__":
 
     transas = [True, False]
     transbs = [False, True]
-    scales = [64, 128, 512, 1024, 2014]
+    scales = [64, 128, 512, 1024, 2048]
 
     for ta, tb, scale in product(transas, transbs, scales):
-        lower, build = gemm(scale, scale, scale, ta, tb)
+        gemm(scale, scale, scale, ta, tb)
 
     # test_gemm(512, 1, 512, 1, 1, 1, 8, 8);
     # test_gemm(512, 2, 512, 1, 8, 1, 1, 8);
