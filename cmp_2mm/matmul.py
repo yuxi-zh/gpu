@@ -116,29 +116,28 @@ def gemm(m, n, l,
     s[BB].bind(ty, thread_y)
     s[BB].bind(tx, thread_x)
 
-    with tvm.build_config(auto_unroll_max_step=128, unroll_explicit=False):
-        lower_func = tvm.lower(s, [A, B, C], simple_mode=True)
-        # build_func = tvm.build(s, [A, B, C], 'cuda')
-        build_func = None
-    
-    return lower_func, build_func
+    def check():
+        # lower_func = tvm.lower(s, [A, B, C], simple_mode=True)
+        f = tvm.build(s, [A, B, C], 'cuda')
+        
+        ctx = tvm.context('cuda', 0)
+        ashape = (m, l) if not transa else (l, m)
+        bshape = (l, n) if not transb else (n, l)
+        a_np = np.random.uniform(size=ashape).astype(A.dtype)
+        b_np = np.random.uniform(size=bshape).astype(B.dtype)
+        a = tvm.nd.array(a_np, ctx)
+        b = tvm.nd.array(b_np, ctx)
+        c = tvm.nd.array(np.zeros((m, n), dtype=C.dtype), ctx)
+        lhs = a_np if not transa else a_np.T
+        rhs = b_np if not transb else b_np.T
+        np.testing.assert_allclose(c.asnumpy(), np.dot(lhs, rhs), rtol=1e-5)
+        timer_f = f.time_evaluator(f.entry_name, ctx, number=50)
+        t = timer_f(a, b, c).mean
+        GFLOPS = (2 * m * n * l) / (t * 1e3) / 1e6
+        print(transa, transb, '%4d %4d %4d %f %f' % (m, n, l, t, GFLOPS))
 
-def check(f, m, n, l, transa, transb):
-    ctx = tvm.context('cuda', 0)
-    ashape = (m, l) if not transa else (l, m)
-    bshape = (l, n) if not transb else (n, l)
-    a_np = np.random.uniform(size=ashape).astype('float32')
-    b_np = np.random.uniform(size=bshape).astype('float32')
-    a = tvm.nd.array(a_np, ctx)
-    b = tvm.nd.array(b_np, ctx)
-    c = tvm.nd.array(np.zeros((m, n), dtype=C.dtype), ctx)
-    lhs = a_np if not transa else a_np.T
-    rhs = b_np if not transb else b_np.T
-    np.testing.assert_allclose(c.asnumpy(), np.dot(lhs, rhs), rtol=1e-5)
-    timer_f = f.time_evaluator(f.entry_name, ctx, number=50)
-    t = timer_f(a, b, c).mean
-    GFLOPS = (2 * m * n * l) / (t * 1e3) / 1e6
-    print(transa, transb, '%4d %4d %4d %f %f' % (m, n, l, t, GFLOPS))
+    with tvm.build_config(auto_unroll_max_step=128, unroll_explicit=False):
+        check()
 
 from itertools import product
 
@@ -150,7 +149,6 @@ if __name__ == "__main__":
 
     for ta, tb, scale in product(transas, transbs, scales):
         lower, build = gemm(scale, scale, scale, ta, tb)
-        check(build, scale, scale, scale, ta, tb)
 
     # test_gemm(512, 1, 512, 1, 1, 1, 8, 8);
     # test_gemm(512, 2, 512, 1, 8, 1, 1, 8);
