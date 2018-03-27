@@ -1,6 +1,17 @@
-import os
+"""Example code to do square matrix multiplication."""
 import tvm
+import os
+from tvm.contrib import nvcc
+from tvm.contrib import spirv
 import numpy as np
+
+TASK="gemm"
+USE_MANUAL_CODE = False
+
+@tvm.register_func
+def tvm_callback_cuda_compile(code):
+    ptx =  nvcc.compile_cuda(code, target="ptx")
+    return ptx
 
 def write_code(code, fname):
     with open(fname, "w") as f:
@@ -10,95 +21,141 @@ def write_code(code, fname):
 def tvm_callback_cuda_postproc(code):
     if not os.path.exists("perf"):
         os.mkdir("perf")
-    write_code(code, "perf/%s_generated.cu" % 'matmul')
+    write_code(code, "perf/%s_generated.cu" % TASK)
+    if USE_MANUAL_CODE:
+        code = open("perf/%s_manual.cu" % TASK).read()
     return code
 
-M = 1024
-K = 1024
-N = 1024
+def gemm(m, n, l, 
+                transa=False, transb=True, 
+                thd_x=8, thd_y=8,
+                scale_x=8, scale_y=8, 
+                k_factor=8):
 
-A = tvm.placeholder((M, K), name="A")
-B = tvm.placeholder((K, N), name="B")
-k = tvm.reduce_axis((0, K), name="k")
-C = tvm.compute((M, N), lambda x, y: tvm.sum(A[x, k] * B[k, y], axis=k), name="C")
+    ashape = (m, l) if not transa else (l, m)
+    bshape = (l, n) if not transb else (n, l)
 
-schedule = tvm.create_schedule(C.op)
+    A = tvm.placeholder(ashape, name='A')
+    B = tvm.placeholder(bshape, name='B')
+    k = tvm.reduce_axis((0, l), name='k')
 
-lower_func = tvm.lower(schedule, [A, B, C], simple_mode=True)
-print(lower_func)
+    _A = tvm.compute((l, m), lambda y, x: A[x, y], name="TA") if not transa else A
+    _B = tvm.compute((l, n), lambda y, x: B[x, y], name="TB") if transb else B
+    C = tvm.compute((m, n), lambda y, x: tvm.sum(_A[k, y] * _B[k, x], axis=k), name="C")
 
-TX = 16
-TY = 16
-SK = 16
+    s = tvm.create_schedule(C.op)
 
-BX = M / TX
-BY = N / TY
+    if not transa:
+        s[_A].compute_inline()
+    if transb:
+        s[_B].compute_inline()
 
-blk_x = tvm.thread_axis("blockIdx.x")
-blk_y = tvm.thread_axis("blockIdx.y")
-thd_x = tvm.thread_axis((0, TX), "threadIdx.x")
-thd_y = tvm.thread_axis((0, TY), "threadIdx.y")
+    AA = s.cache_read(_A, "shared", [C])
+    BB = s.cache_read(_B, "shared", [C])
+    AL = s.cache_read(AA, "local", [C])
+    BL = s.cache_read(BB, "local", [C])
+    CC = s.cache_write(C, "local")
 
-cxo, cyo, cxi, cyi = schedule[C].tile(C.op.axis[0], C.op.axis[1], BX, BY)
-ko, ki = schedule[C].split(k, factor=SK)
-cxi, cxii = schedule[C].split(cxi, nparts=BX/TX)
-cyi, cyii = schedule[C].split(cyi, nparts=BY/TY)
-cxiii, cxii = schedule[C].split(cxii, factor=TX)
-cyiii, cyii = schedule[C].split(cyii, factor=TY)
-schedule[C].reorder(cxo, cyo, cxi, cyi, cxii, cyii, ko, ki, cxiii, cyiii)
-vthd_x = tvm.thread_axis((0, BX/TX), "vthread", name="vx")
-vthd_y = tvm.thread_axis((0, BY/TY), "vthread", name="vy")
-schedule[C].bind(cxo, blk_x)
-schedule[C].bind(cyo, blk_y)
-schedule[C].bind(cxi, vthd_x)
-schedule[C].bind(cyi, vthd_y)
-schedule[C].bind(cxii, thd_x)
-schedule[C].bind(cyii, thd_y)
+    block_factor_x = scale_x * thd_x
+    block_factor_y = scale_y * thd_y
+    block_x = tvm.thread_axis("blockIdx.x")
+    block_y = tvm.thread_axis("blockIdx.y")
+    thread_x = tvm.thread_axis((0, thd_x), "threadIdx.x")
+    thread_y = tvm.thread_axis((0, thd_y), "threadIdx.y")
+    thread_xz = tvm.thread_axis((0, 2), "vthread", name="vx")
+    thread_yz = tvm.thread_axis((0, 2), "vthread", name="vy")
 
-# cxyi = schedule[C].fuse(cxi, cyi)
-# schedule[C].unroll(cxyi)
+    by, yi = s[C].split(C.op.axis[0], factor=block_factor_y)
+    bx, xi = s[C].split(C.op.axis[1], factor=block_factor_x)
+    s[C].bind(by, block_y)
+    s[C].bind(bx, block_x)
+    s[C].reorder(by, bx, yi, xi)
 
-AS = schedule.cache_read(A, 'shared', [C])
-schedule[AS].compute_at(schedule[C], ko)
-asx, asy = AS.op.axis
-asxo, asxi = schedule[AS].split(asx, factor=TX)
-asyo, asyi = schedule[AS].split(asy, factor=TY)
-schedule[AS].reorder(asxi, asyi, asxo, asyo)
-schedule[AS].bind(asxi, thd_x)
-schedule[AS].bind(asyi, thd_y)
-asxyo = schedule[AS].fuse(asxo, asyo)
-schedule[AS].unroll(asxyo)
+    tyz, yi = s[C].split(yi, nparts=2)
+    ty, yi = s[C].split(yi, nparts=thd_y)
+    txz, xi = s[C].split(xi, nparts=2)
+    tx, xi = s[C].split(xi, nparts=thd_x)
+    s[C].bind(tyz, thread_yz)
+    s[C].bind(txz, thread_xz)
+    s[C].bind(ty, thread_y)
+    s[C].bind(tx, thread_x)
+    s[C].reorder(tyz, txz, ty, tx, yi, xi)
+    s[CC].compute_at(s[C], tx)
 
-BS = schedule.cache_read(B, 'shared', [C])
-schedule[BS].compute_at(schedule[C], ko)
-bsx, bsy = BS.op.axis
-bsxo, bsxi = schedule[BS].split(bsx, factor=TX)
-bsyo, bsyi = schedule[BS].split(bsy, factor=TY)
-schedule[BS].reorder(bsxi, bsyi, bsxo, bsyo)
-schedule[BS].bind(bsxi, thd_x)
-schedule[BS].bind(bsyi, thd_y)
-bsxyo = schedule[BS].fuse(bsxo, bsyo)
-schedule[BS].unroll(bsxyo)
+    yo, xo = CC.op.axis
+    ko, ki = s[CC].split(k, factor=k_factor)
+    kt, ki = s[CC].split(ki, factor=1)
+    s[CC].reorder(ko, kt, ki, yo, xo)
+    s[AA].compute_at(s[CC], ko)
+    s[BB].compute_at(s[CC], ko)
+    s[CC].unroll(kt)
+    s[AL].compute_at(s[CC], kt)
+    s[BL].compute_at(s[CC], kt)
+    
+    if transa:
+        xo, xi = s[AA].split(AA.op.axis[1], factor=thd_x * 4)
+        tx, xi = s[AA].split(xi, nparts=thd_x)
+        ty, _ = s[AA].split(AA.op.axis[0], nparts=thd_y)    
+        s[AA].vectorize(xi)
+    else:
+        tx, _ = s[AA].split(AA.op.axis[1], nparts=thd_x)
+        ty, _ = s[AA].split(AA.op.axis[0], nparts=thd_y)
 
-AL = schedule.cache_read(AS, 'local', [C])
-schedule[AL].compute_at(schedule[C], ki)
+    s[AA].bind(ty, thread_y)
+    s[AA].bind(tx, thread_x)
 
-BL = schedule.cache_read(BS, 'local', [C])
-schedule[BL].compute_at(schedule[C], ki)
+    if not transb:
+        xo, xi = s[BB].split(BB.op.axis[1], factor=thd_x * 4)
+        tx, xi = s[BB].split(xi, nparts=thd_x)
+        ty, _ = s[BB].split(BB.op.axis[0], nparts=thd_y)
+        s[BB].vectorize(xi)
+    else:
+        tx, _ = s[BB].split(BB.op.axis[1], nparts=thd_x)
+        ty, _ = s[BB].split(BB.op.axis[0], nparts=thd_y)
+    
+    s[BB].bind(ty, thread_y)
+    s[BB].bind(tx, thread_x)
 
-lower_func = tvm.lower(schedule, [A, B, C], simple_mode=True)
-# print(lower_func)
-# tvm.save_json(lower_func)
-# print(type(lower_func))
+    with tvm.build_config(auto_unroll_max_step=128, unroll_explicit=False):
+        lower_func = tvm.lower(s, [A, B, C], simple_mode=True)
+        # build_func = tvm.build(s, [A, B, C], 'cuda')
+        build_func = None
+    
+    return lower_func, build_func
 
-with tvm.build_config(dump_pass_ir=True) as cfg:
-	build_func = tvm.build(schedule, [A, B, C], target='cuda -mattr=output_device', name='matmul')
-	print(build_func.imported_modules[0].get_source())
+def check(f, m, n, l, transa, transb):
+    ctx = tvm.context('cuda', 0)
+    ashape = (m, l) if not transa else (l, m)
+    bshape = (l, n) if not transb else (n, l)
+    a_np = np.random.uniform(size=ashape).astype('float32')
+    b_np = np.random.uniform(size=bshape).astype('float32')
+    a = tvm.nd.array(a_np, ctx)
+    b = tvm.nd.array(b_np, ctx)
+    c = tvm.nd.array(np.zeros((m, n), dtype=C.dtype), ctx)
+    lhs = a_np if not transa else a_np.T
+    rhs = b_np if not transb else b_np.T
+    np.testing.assert_allclose(c.asnumpy(), np.dot(lhs, rhs), rtol=1e-5)
+    timer_f = f.time_evaluator(f.entry_name, ctx, number=50)
+    t = timer_f(a, b, c).mean
+    GFLOPS = (2 * m * n * l) / (t * 1e3) / 1e6
+    print(transa, transb, '%4d %4d %4d %f %f' % (m, n, l, t, GFLOPS))
 
-# ctx = tvm.context("cuda", 0)
-# high = 1024
-# a = tvm.nd.array(np.random.uniform(high=high, size=M*K).astype(A.dtype).reshape((M,K)), ctx)
-# b = tvm.nd.array(np.random.uniform(high=high, size=K*N).astype(B.dtype).reshape((K,N)), ctx)
-# c = tvm.nd.array(np.zeros((M,N)).astype(C.dtype).reshape((M,N)), ctx)
-# evaluator = build_func.time_evaluator(build_func.entry_name, ctx, number=50)
-# print('time: %f ms' % (evaluator(a, b, c).mean * 1e3))
+from itertools import product
+
+if __name__ == "__main__":
+
+    transas = [True, False]
+    transbs = [False, True]
+    scales = [64, 128, 512, 1024, 2014]
+
+    for ta, tb, scale in product(transas, transbs, scales):
+        lower, build = gemm(scale, scale, scale, ta, tb)
+        check(build, scale, scale, scale, ta, tb)
+
+    # test_gemm(512, 1, 512, 1, 1, 1, 8, 8);
+    # test_gemm(512, 2, 512, 1, 8, 1, 1, 8);
+    # test_gemm(512, 4, 512, 4, 8, 1, 1, 8);
+    # test_gemm(512, 8, 512, 1, 8, 8, 8, 8);
+    # test_gemm(512, 16, 512, 2, 4, 8, 8, 8);
+    # test_gemm(512, 32, 512, 4, 8, 8, 8, 8);
+    # test_gemm(512, 64, 512, 8, 8, 8, 8, 8);
