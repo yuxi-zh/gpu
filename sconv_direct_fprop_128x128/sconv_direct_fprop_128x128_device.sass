@@ -1,0 +1,794 @@
+# Kernel: _Z26sconv_direct_fprop_128x128PfS_S_S_S_ffjjjjjjjjjjjjjjjjjjjjiiijjjjjjjjjjjjjjjjjjjjjjjj
+# Arch: sm_61
+# InsCnt: 
+# RegCnt: 127
+# SharedSize: 16424
+# BarCnt: 1
+# Params():
+#
+# Instructions:
+
+<CONSTANT_MAPPING>
+    blockDimX : c[0x0][0x8]
+    blockDimY : c[0x0][0xc]
+    blockDimZ : c[0x0][0x10]
+    gridDimX : c[0x0][0x14]
+    gridDimY : c[0x0][0x18]
+    gridDimZ : c[0x0][0x1c]
+
+    param_0[0] : c[0x0][0x140]
+    param_0[1] : c[0x0][0x144]
+    param_1[0] : c[0x0][0x148]
+    param_1[1] : c[0x0][0x14c]
+    param_2[0] : c[0x0][0x150]
+    param_2[1] : c[0x0][0x154]
+    param_3[0] : c[0x0][0x158]
+    param_3[1] : c[0x0][0x15c]
+    param_4[0] : c[0x0][0x160]
+    param_4[1] : c[0x0][0x164]
+    param_5 : c[0x0][0x168]
+    param_6 : c[0x0][0x16c]
+    param_7 : c[0x0][0x170]
+    param_8 : c[0x0][0x174]
+    param_9 : c[0x0][0x178]
+    param_10 : c[0x0][0x17c]
+    param_11 : c[0x0][0x180]
+    param_12 : c[0x0][0x184]
+    param_13 : c[0x0][0x188]
+    param_14 : c[0x0][0x18c]
+    param_15 : c[0x0][0x190]
+    param_16 : c[0x0][0x194]
+    param_17 : c[0x0][0x198]
+    param_18 : c[0x0][0x19c]
+    param_19 : c[0x0][0x1a0]
+    param_20 : c[0x0][0x1a4]
+    param_21 : c[0x0][0x1a8]
+    param_22 : c[0x0][0x1ac]
+    param_23 : c[0x0][0x1b0]
+    param_24 : c[0x0][0x1b4]
+    param_25 : c[0x0][0x1b8]
+    param_26 : c[0x0][0x1bc]
+    param_27 : c[0x0][0x1c0]
+    param_28 : c[0x0][0x1c4]
+    param_29 : c[0x0][0x1c8]
+    param_30 : c[0x0][0x1cc]
+    param_31 : c[0x0][0x1d0]
+    param_32 : c[0x0][0x1d4]
+    param_33 : c[0x0][0x1d8]
+    param_34 : c[0x0][0x1dc]
+    param_35 : c[0x0][0x1e0]
+    param_36 : c[0x0][0x1e4]
+    param_37 : c[0x0][0x1e8]
+    param_38 : c[0x0][0x1ec]
+    param_39 : c[0x0][0x1f0]
+    param_40 : c[0x0][0x1f4]
+    param_41 : c[0x0][0x1f8]
+    param_42 : c[0x0][0x1fc]
+    param_43 : c[0x0][0x200]
+    param_44 : c[0x0][0x204]
+    param_45 : c[0x0][0x208]
+    param_46 : c[0x0][0x20c]
+    param_47 : c[0x0][0x210]
+    param_48 : c[0x0][0x214]
+    param_49 : c[0x0][0x218]
+    param_50 : c[0x0][0x21c]
+    param_51 : c[0x0][0x220]
+    param_52 : c[0x0][0x224]
+    param_53 : c[0x0][0x228]
+</CONSTANT_MAPPING>
+
+--:-:1:-:1      S2R R123, SR_TID.X;
+--:-:2:-:1      S2R R77, SR_CTAID.X;
+--:-:3:-:1      S2R R67, SR_CTAID.Y;
+--:-:4:-:1      S2R R126, SR_CTAID.Z;
+--:-:-:-:2      ISCADD R119, R68, R73.reuse, 0x7;
+02:-:-:-:1  @P1 XMAD R80, R77.reuse, R92.reuse, RZ;
+08:-:-:-:1      ISCADD R118, R126, R73, 0x7;
+--:-:-:-:1  @P1 XMAD R81, R77.reuse, R92.H1.reuse, RZ;
+--:-:-:-:1  @P1 XMAD R78, R77.H1.reuse, R92.H1.reuse, RZ;
+--:-:-:-:1      SHL R119, R119, 0x2;
+--:-:-:-:1      LOP.OR R124, R124, R101;
+--:-:-:-:1  @P1 XMAD.CHI R80, R77.H1.reuse, R92, R80;
+--:-:-:-:4      LOP.OR R125, R125, R96;
+--:-:-:-:1      SHL R124, R124, 0x4;
+--:-:-:-:1  @P1 IADD3.RS R64, R80, R81, R78;
+--:-:-:Y:5      ISCADD R125, R125, 0x1000, 0x4;
+--:-:-:-:2  @P1 SHR.U32 R64, R64, param_42;
+--:-:-:Y:6 @!P1 SHR.U32 R64, R77, param_42;
+--:-:-:Y:6      XMAD R84, R74.reuse, R64.reuse, R77;
+--:-:-:Y:6      XMAD.PSL R84, R74.H1, R64, R84;
+--:-:-:-:1  @P2 XMAD R80, R84.reuse, R93.reuse, RZ;
+--:-:-:-:1  @P2 XMAD R81, R84.reuse, R93.H1.reuse, RZ;
+--:-:-:-:4  @P2 XMAD R78, R84.H1.reuse, R93.H1.reuse, RZ;
+--:-:-:Y:6  @P2 XMAD.CHI R80, R84.H1.reuse, R93, R80;
+--:-:-:Y:6  @P2 IADD3.RS R85, R80, R81, R78;
+--:-:-:-:2  @P2 SHR.U32 R85, R85, param_44;
+--:-:-:Y:6 @!P2 SHR.U32 R85, R84, param_44;
+--:-:-:-:1      XMAD R89, R82.reuse, R85.reuse, R84;
+--:-:-:-:1      ISETP.NE.AND P1, PT, R85.reuse, param_36, PT;
+--:-:-:-:1      SHL R65, R85.reuse, 0x1;
+--:-:-:-:3      LOP.AND.NZ P2, RZ, R85, 0x1;
+--:-:-:Y:6      XMAD.PSL R89, R82.H1, R85, R89;
+--:-:-:Y:6      XMAD R88, R89.reuse, param_45, RZ;
+--:-:-:Y:6      XMAD.PSL R88, R89, param_45.H1, R88;
+--:-:-:Y:6      SHR.U32 R88, R88, param_46;
+--:-:-:-:1      XMAD.S16.U16 R76, R86, R88.reuse, R89;
+--:-:-:-:1  @P1 BFE.U32 R97, R88.reuse, 0x101;
+--:-:-:-:1  @P1 LOP.AND R72, R88.reuse, 0x1;
+--:-:-:-:1  @P1 SHR.U32 R66, R88, 0x1;
+--:-:-:-:2 @!P1 MOV R66, R88;
+04:-:-:-:2      XMAD R67, R67, param_40, R76;
+--:-:-:-:2  @P1 LOP.XOR R72, R72, R97;
+--:-:-:-:2  @P2 IADD3 R66, -R66, param_37, R69;
+--:-:-:-:2      ISCADD R114, R67, R73, 0x7;
+--:-:-:-:1  @P1 IADD R65, R65, R72;
+--:-:-:-:5  @P0 BRA.U TARGET1;
+--:-:-:-:1      XMAD R92, R66, param_32, RZ;
+--:-:-:-:1      XMAD R78, R65, param_31, RZ;
+--:-:-:-:1      XMAD R75, R64, param_30, RZ;
+--:-:-:-:1      MOV R101, R123;
+--:-:-:-:1      MOV R88, RZ;
+--:-:-:-:1      SHR.U32 R93, R69, R72;
+--:-:-:-:1      MOV R116, RZ;
+--:-:-:-:1      MOV R91, 0x20;
+--:-:-:-:1      IADD R92, R92, -param_29;
+--:-:-:-:1      IADD R78, R78, -param_28;
+--:-:-:-:1      IADD R75, R75, -param_27;
+TARGET2:
+--:-:-:-:1      XMAD R90, R101.reuse, param_23, RZ;
+--:-:-:-:2      ISETP.LT.AND P6, PT, R101.reuse, param_18, PT;
+--:-:-:-:1      ISETP.LT.AND P0, PT, R91, param_18, PT;
+--:-:-:-:2      IADD R91, R91, 0x20;
+--:-:-:Y:6      XMAD.PSL R90, R101, param_23.H1, R90;
+--:-:-:Y:6      SHR.U32 R90, R90, param_24;
+--:-:-:-:1      XMAD R76, R90.reuse, param_19, RZ;
+--:-:-:Y:5      XMAD R81, R90, param_33, R75;
+--:-:-:-:1      IADD R76, -R76, R101;
+--:-:-:Y:5      ISETP.GE.AND P6, PT, R81.reuse, RZ, P6;
+--:-:-:Y:6      XMAD R79, R76.reuse, param_25, RZ;
+--:-:-:-:2      XMAD.PSL R79, R76, param_25.H1, R79;
+--:-:-:-:4      ISETP.LT.AND P6, PT, R81, param_10, P6;
+--:-:-:Y:6      SHR.U32 R79, R79, param_26;
+--:-:-:-:1      XMAD R85, R79.reuse, param_22, RZ;
+--:-:-:Y:5      XMAD R96, R79, param_34, R78;
+--:-:-:-:1      IADD R85, -R85, R76;
+--:-:-:Y:5      ISETP.GE.AND P5, PT, R96.reuse, RZ, PT;
+--:-:-:Y:6      XMAD R94, R85, param_35, R92;
+--:-:-:-:1      ISETP.GE.AND P4, PT, R94.reuse, RZ, PT;
+01:-:-:-:1      XMAD R112, R94.reuse, param_8, RZ;
+--:-:-:Y:5      ISETP.LT.AND P5, PT, R96.reuse, param_11, P5;
+--:-:-:Y:6      XMAD R112, R96.reuse, param_13, R112;
+--:-:-:-:1      ISETP.LT.AND P4, PT, R94, param_12, P4;
+--:-:-:Y:6      XMAD.PSL R112, R96, param_13.H1, R112;
+--:-:-:Y:6      XMAD R112, R81.reuse, param_14, R112;
+--:-:-:-:1      PSETP.AND.AND P1, PT, P4, P5, P6;
+--:-:-:-:1      XMAD.PSL R112, R81, param_14.H1, R112;
+--:-:-:Y:b      XMAD R113, R101, param_9, RZ;
+--:-:-:-:2      VOTE.ANY R80, PT, P1;
+--:-:2:-:1      POPC R89, R80;
+--:-:-:-:1  @P1 MOV R97, R88;
+02:-:-:-:1      ISCADD R88, R89, R88, 0x3;
+--:-:-:-:1  @P1 LOP.AND R74, R93, R80;
+--:-:-:Y:5      IADD R116, R116, R89;
+--:-:3:-:1  @P1 POPC R84, R74;
+--:-:-:-:1      IADD R101, R101, 0x20;
+04:-:-:-:4  @P1 ISCADD R97, R84, R97, 0x3;
+--:1:-:-:1  @P1 STS.64 [R97+0x4028], R112;
+--:-:-:-:5  @P0 BRA.U TARGET2;
+--:1:-:-:2      STS [0x4020], R116;
+TARGET1:
+01:-:-:-:5      BAR.SYNC 0x0;
+--:-:1:-:2      LDS R116, [0x4020];
+25:3:4:-:8      MUFU.RCP R120, R120;
+--:1:2:-:a      IADD3 R122, R73.reuse, -1, -R68;
+03:-:-:-:4      FMUL R117, R121, R120;
+--:-:-:-:2  @P1 MOV R77, 0x8;
+--:-:-:-:2      FFMA R117, R117, 5.9604644775390625e-08, R117;
+--:-:2:-:2      F2I.S32.F32.TRUNC R117, R117;
+--:-:-:Y:6      ISETP.LT.AND P1, PT, R68, R77.reuse, P0;
+02:-:-:-:1      VMAD.U16.U16 R115, -R117.reuse, R116, R122;
+--:-:-:-:1      XMAD R109, R117.reuse, param_15, RZ;
+--:-:-:-:1      XMAD R108, R117.reuse, param_17, RZ;
+--:-:-:-:3      IADD R122, R122, -R77;
+--:-:-:-:1      SHL R115, R115, 0x3;
+--:-:-:-:3      XMAD.PSL R109, R117, param_15.H1, R109;
+--:-:1:-:2  @P1 LDS.U.64 R112, [R115+0x4028];
+01:-:-:-:1  @P1 IADD3 R110, R114, R108, R113.reuse;
+--:-:-:-:5  @P1 IADD3 R111, R118, R109, R112.reuse;
+--:-:-:-:6  @P1 LEA R98.CC, R110.reuse, param_4[0], 0x2;
+--:-:-:-:1  @P1 LEA.HI.X R99, R110, param_4[1], RZ, 0x2;
+--:-:-:-:6  @P1 LEA R96.CC, R111.reuse, param_3[0], 0x2;
+2c:3:4:Y:8 @!P1 LDS.U.128 R104, [0x4000];
+--:1:1:Y:0  @P1 LDG.E.128 R100, [R96];
+01:-:-:-:5      BAR.SYNC 0x0;
+--:-:-:-:1      LDS.U.128 R72, [R124];
+--:-:-:-:1      LDS.U.128 R68, [R125+0x80];
+--:-:1:-:2      LDS.U.128 R76, [R124+0x100];
+02:-:-:Y:6  @P1 FMUL R117, R121, R120;
+--:-:-:-:2  @P1 FFMA R117, R117, 5.9604644775390625e-08, R117;
+--:-:2:Y:8  @P1 F2I.S32.F32.TRUNC R117, R117;
+02:-:-:-:1  @P1 VMAD.U16.U16 R115, -R117.reuse, R116, R122;
+--:-:-:-:1  @P1 XMAD R109, R117.reuse, param_15, RZ;
+--:-:-:-:1  @P1 XMAD R108, R117.reuse, param_17, RZ;
+--:-:-:-:3      IADD R122, R122, -0x8;
+--:-:-:-:1  @P1 SHL R115, R115, 0x3;
+--:-:-:-:3  @P1 XMAD.PSL R109, R117, param_15.H1, R109;
+--:-:2:-:2  @P1 LDS.U.64 R112, [R115+0x4028];
+02:-:-:-:1  @P1 IADD3 R110, R114, R108, R113.reuse;
+--:-:-:-:5  @P1 IADD3 R111, R118, R109, R112.reuse;
+--:-:-:-:6  @P1 LEA R98.CC, R110.reuse, param_4[0], 0x2;
+--:-:-:-:1  @P1 LEA.HI.X R99, R110, param_4[1], RZ, 0x2;
+--:-:-:-:6  @P1 LEA R96.CC, R111.reuse, param_3[0], 0x2;
+2c:3:4:Y:8  @P1 LDG.E.128 R100, [R96];
+2f:6:3:-:0      FFMA R0, R65.reuse, R74, R0;
+--:2:1:Y:0      ISETP.GE.AND P1, PT, R122.reuse, RZ, PT;
+--:-:-:-:1      ISETP.GE.AND P0, PT, R122, -0x8, PT;
+--:-:-:-:1      FFMA R4, R65.reuse, R75, R4;
+--:-:-:-:1      FFMA R7, R64.reuse, R73, R7;
+--:-:-:-:1      FFMA R33, R64.reuse, R78.reuse, R33;
+--:-:-:-:1      FFMA R32, R65.reuse, R78, R32;
+--:-:-:-:1      FFMA R34, R65.reuse, R76.reuse, R34;
+--:-:-:-:1      FFMA R35, R64.reuse, R76, R35;
+--:-:-:-:1      FFMA R37, R64.reuse, R79.reuse, R37;
+--:-:-:-:1      FFMA R38, R65, R77.reuse, R38;
+--:-:-:-:1      FFMA R39, R64, R77.reuse, R39;
+--:-:-:-:1      FFMA R45, R66.reuse, R79.reuse, R45;
+--:-:-:-:1      FFMA R44, R67.reuse, R79, R44;
+--:-:-:-:1      FFMA R46, R67.reuse, R77.reuse, R46;
+--:-:-:-:1      FFMA R47, R66.reuse, R77, R47;
+--:-:-:-:1      FFMA R41, R66.reuse, R78.reuse, R41;
+--:-:-:-:1      FFMA R40, R67.reuse, R78, R40;
+--:-:-:-:1      FFMA R42, R67.reuse, R76.reuse, R42;
+--:-:-:-:1      FFMA R43, R66.reuse, R76, R43;
+--:-:-:-:1      FFMA R13, R66.reuse, R75.reuse, R13;
+--:-:-:-:1      FFMA R12, R67.reuse, R75, R12;
+--:-:-:-:1      FFMA R14, R67.reuse, R73.reuse, R14;
+--:-:-:-:1      FFMA R15, R66.reuse, R73, R15;
+--:-:-:-:1      FFMA R9, R66.reuse, R74.reuse, R9;
+--:-:-:-:1      FFMA R8, R67.reuse, R74.reuse, R8;
+--:-:-:-:1      FFMA R10, R67, R72.reuse, R10;
+--:-:-:-:1      FFMA R11, R66, R72.reuse, R11;
+--:-:-:Y:1      FFMA R17, R68.reuse, R74.reuse, R17;
+--:-:-:-:1      FFMA R16, R69.reuse, R74, R16;
+--:-:-:-:1      FFMA R18, R69.reuse, R72.reuse, R18;
+--:-:-:-:1      FFMA R19, R68.reuse, R72, R19;
+--:-:-:-:1      FFMA R21, R68.reuse, R75.reuse, R21;
+--:-:-:-:1      FFMA R20, R69.reuse, R75, R20;
+--:-:-:-:1      FFMA R22, R69.reuse, R73.reuse, R22;
+--:-:-:-:1      FFMA R23, R68.reuse, R73, R23;
+20:-:-:-:1  @P1 FMUL R117, R121, R120;
+--:-:-:-:1      FFMA R49, R68.reuse, R78.reuse, R49;
+--:-:-:-:1      FFMA R48, R69.reuse, R78, R48;
+--:-:-:-:1      FFMA R50, R69.reuse, R76.reuse, R50;
+--:-:-:-:1      FFMA R51, R68.reuse, R76, R51;
+--:-:-:-:1      FFMA R53, R68.reuse, R79.reuse, R53;
+--:-:-:-:1  @P1 FFMA R117, R117, 5.9604644775390625e-08, R117;
+--:-:-:-:1      FFMA R52, R69.reuse, R79.reuse, R52;
+--:-:-:-:1      FFMA R55, R68, R77.reuse, R55;
+--:-:-:-:1      FFMA R61, R70.reuse, R79.reuse, R61;
+--:-:-:-:1      FFMA R60, R71.reuse, R79, R60;
+--:-:-:-:1      FFMA R62, R71.reuse, R77.reuse, R62;
+--:-:-:-:1      FFMA R63, R70.reuse, R77, R63;
+--:-:-:-:1      FFMA R57, R70.reuse, R78.reuse, R57;
+--:-:-:-:1      FFMA R56, R71.reuse, R78, R56;
+--:-:-:-:1      FFMA R58, R71.reuse, R76.reuse, R58;
+--:-:-:-:1      FFMA R59, R70.reuse, R76, R59;
+--:-:-:-:1      FFMA R29, R70.reuse, R75.reuse, R29;
+--:-:-:-:1      FFMA R28, R71.reuse, R75, R28;
+--:-:-:-:1      FFMA R30, R71.reuse, R73.reuse, R30;
+--:-:-:-:1      FFMA R31, R70.reuse, R73, R31;
+--:-:-:-:1      FFMA R25, R70.reuse, R74.reuse, R25;
+--:-:-:-:1      FFMA R24, R71.reuse, R74, R24;
+--:-:-:-:1      FFMA R26, R71, R72.reuse, R26;
+--:-:-:-:1      FFMA R27, R70, R72, R27;
+--:-:-:-:1      FFMA R0, R81.reuse, R90, R0;
+--:-:-:-:1      FFMA R3, R80.reuse, R88, R3;
+--:-:-:-:1      FFMA R4, R81.reuse, R91, R4;
+--:-:-:-:1      FFMA R7, R80.reuse, R89, R7;
+--:-:-:-:1      FFMA R33, R80.reuse, R94.reuse, R33;
+20:-:-:-:1  @P1 VMAD.U16.U16 R115, -R117, R116, R122;
+--:-:-:-:1      FFMA R32, R81.reuse, R94, R32;
+--:-:-:-:1      FFMA R34, R81.reuse, R92.reuse, R34;
+--:-:-:-:1      FFMA R35, R80.reuse, R92, R35;
+--:-:-:-:1      FFMA R37, R80.reuse, R95.reuse, R37;
+--:-:-:-:1      FFMA R36, R81.reuse, R95.reuse, R36;
+--:-:-:-:1  @P1 SHL R115, R115, 0x3;
+--:-:-:-:1      FFMA R38, R81, R93.reuse, R38;
+--:-:-:-:1      FFMA R39, R80, R93.reuse, R39;
+--:-:-:-:1      FFMA R45, R82.reuse, R95.reuse, R45;
+--:-:-:-:1      FFMA R46, R83.reuse, R93.reuse, R46;
+--:-:-:-:1      FFMA R47, R82.reuse, R93, R47;
+--:-:-:-:1      FFMA R41, R82.reuse, R94.reuse, R41;
+--:-:-:-:1      FFMA R40, R83.reuse, R94, R40;
+--:-:-:-:1      FFMA R42, R83.reuse, R92.reuse, R42;
+--:-:-:-:1      FFMA R43, R82.reuse, R92, R43;
+--:-:-:-:1      FFMA R13, R82.reuse, R91.reuse, R13;
+--:-:-:-:1      FFMA R12, R83.reuse, R91, R12;
+--:-:-:-:1      FFMA R14, R83.reuse, R89.reuse, R14;
+--:-:-:-:1      FFMA R15, R82.reuse, R89, R15;
+--:-:-:-:1      FFMA R9, R82.reuse, R90.reuse, R9;
+--:-:-:-:1      FFMA R8, R83.reuse, R90.reuse, R8;
+--:-:-:-:1      FFMA R10, R83, R88.reuse, R10;
+--:-:-:-:1      FFMA R11, R82, R88.reuse, R11;
+--:-:-:Y:1      FFMA R17, R84.reuse, R90.reuse, R17;
+--:-:-:-:1      FFMA R16, R85.reuse, R90, R16;
+--:-:-:-:1      FFMA R18, R85.reuse, R88.reuse, R18;
+--:-:-:-:1      FFMA R19, R84.reuse, R88, R19;
+--:-:-:-:1      FFMA R21, R84.reuse, R91.reuse, R21;
+--:-:-:-:1      FFMA R20, R85.reuse, R91, R20;
+--:-:-:-:1      FFMA R22, R85.reuse, R89.reuse, R22;
+--:-:-:-:1      FFMA R23, R84.reuse, R89, R23;
+--:-:-:-:1      FFMA R48, R85.reuse, R94, R48;
+--:-:-:-:1      FFMA R50, R85.reuse, R92.reuse, R50;
+--:-:-:-:1      FFMA R51, R84.reuse, R92, R51;
+--:-:-:-:1      FFMA R53, R84.reuse, R95.reuse, R53;
+--:-:-:-:1      FFMA R52, R85.reuse, R95.reuse, R52;
+--:-:-:-:1      FFMA R54, R85, R93.reuse, R54;
+--:-:-:-:1      FFMA R55, R84, R93.reuse, R55;
+--:-:-:-:1      FFMA R61, R86.reuse, R95.reuse, R61;
+--:-:-:-:1      FFMA R60, R87.reuse, R95, R60;
+--:-:-:-:1      FFMA R62, R87.reuse, R93.reuse, R62;
+--:-:-:-:1      FFMA R63, R86.reuse, R93, R63;
+--:-:-:-:1      FFMA R57, R86.reuse, R94.reuse, R57;
+--:-:-:-:1      FFMA R56, R87.reuse, R94, R56;
+--:-:-:-:1      FFMA R58, R87.reuse, R92.reuse, R58;
+--:-:-:-:1      FFMA R59, R86.reuse, R92, R59;
+--:-:-:-:1      FFMA R29, R86.reuse, R91.reuse, R29;
+--:-:-:-:1      FFMA R28, R87.reuse, R91, R28;
+--:-:-:-:1      FFMA R30, R87.reuse, R89.reuse, R30;
+--:-:-:-:1      FFMA R31, R86.reuse, R89, R31;
+--:-:-:-:1      FFMA R25, R86.reuse, R90.reuse, R25;
+--:-:-:-:1      FFMA R24, R87.reuse, R90, R24;
+--:-:-:-:1      FFMA R26, R87, R88.reuse, R26;
+--:-:-:-:1      FFMA R27, R86, R88, R27;
+--:-:-:-:1      FFMA R0, R65.reuse, R74, R0;
+--:-:-:-:1      FFMA R3, R64.reuse, R72, R3;
+--:-:-:-:1      FFMA R4, R65.reuse, R75, R4;
+--:-:-:-:1      FFMA R7, R64.reuse, R73, R7;
+--:-:-:-:1      FFMA R33, R64.reuse, R78.reuse, R33;
+--:-:-:-:1      FFMA R32, R65.reuse, R78, R32;
+--:-:-:-:1      FFMA R34, R65.reuse, R76.reuse, R34;
+--:-:-:-:1  @P1 XMAD R108, R117.reuse, param_17, RZ;
+--:-:-:-:1      FFMA R35, R64.reuse, R76, R35;
+--:-:-:-:1      FFMA R37, R64.reuse, R79.reuse, R37;
+--:-:-:-:1      FFMA R36, R65.reuse, R79.reuse, R36;
+--:-:-:-:1      FFMA R38, R65, R77.reuse, R38;
+--:-:-:-:1      FFMA R39, R64, R77.reuse, R39;
+--:-:-:-:1  @P1 XMAD R109, R117.reuse, param_15, RZ;
+--:-:-:-:1      FFMA R45, R66.reuse, R79.reuse, R45;
+--:-:-:-:1      FFMA R44, R67.reuse, R79, R44;
+--:-:-:-:1      FFMA R46, R67.reuse, R77.reuse, R46;
+--:-:-:-:1      FFMA R47, R66.reuse, R77, R47;
+--:-:-:-:1      FFMA R41, R66.reuse, R78.reuse, R41;
+--:-:-:-:1  @P1 XMAD.PSL R109, R117, param_15.H1, R109;
+--:-:-:-:1      FFMA R40, R67.reuse, R78, R40;
+--:-:-:-:1      FFMA R42, R67.reuse, R76.reuse, R42;
+--:-:-:-:1      IADD R122, R122, -0x8;
+--:-:-:-:1      FFMA R43, R66.reuse, R76, R43;
+--:-:-:-:1      FFMA R13, R66.reuse, R75.reuse, R13;
+--:-:-:-:1      FFMA R12, R67.reuse, R75, R12;
+--:-:-:-:1      FFMA R14, R67.reuse, R73.reuse, R14;
+--:-:-:-:1      FFMA R15, R66.reuse, R73, R15;
+--:-:-:-:1      FFMA R9, R66.reuse, R74.reuse, R9;
+--:-:-:-:1      FFMA R8, R67.reuse, R74.reuse, R8;
+20:-:-:-:1  @P1 IADD3 R110, R114, R108, R113;
+--:-:-:-:1      FFMA R10, R67, R72.reuse, R10;
+--:-:-:-:1      FFMA R11, R66, R72.reuse, R11;
+--:-:-:Y:1      FFMA R17, R68.reuse, R74.reuse, R17;
+--:-:-:-:1      FFMA R16, R69.reuse, R74, R16;
+--:-:-:-:1      FFMA R18, R69, R72.reuse, R18;
+--:-:-:-:1  @P1 LEA R98.CC, R110, param_4[0], 0x2;
+--:-:-:-:1      FFMA R19, R68.reuse, R72, R19;
+--:-:-:-:1      FFMA R21, R68, R75.reuse, R21;
+--:-:-:-:1  @P1 IADD3 R111, R118, R109, R112;
+--:-:-:-:1      FFMA R20, R69.reuse, R75, R20;
+--:-:-:-:1      FFMA R22, R69.reuse, R73.reuse, R22;
+--:-:-:-:1  @P1 LEA.HI.X R99, R110, param_4[1], RZ, 0x2;
+--:-:-:-:1      FFMA R23, R68.reuse, R73, R23;
+2c:3:4:Y:8      FFMA R48, R69.reuse, R78, R48;
+--:1:1:Y:0      FFMA R50, R69.reuse, R76.reuse, R50;
+--:-:-:-:1      FFMA R54, R69, R77.reuse, R54;
+--:-:-:-:1      FFMA R55, R68, R77.reuse, R55;
+--:-:-:-:1      FFMA R61, R70.reuse, R79.reuse, R61;
+--:-:-:-:1      FFMA R60, R71.reuse, R79, R60;
+--:-:-:-:1      FFMA R62, R71.reuse, R77.reuse, R62;
+--:-:-:-:1      FFMA R63, R70.reuse, R77, R63;
+--:-:-:-:1      FFMA R57, R70.reuse, R78.reuse, R57;
+--:-:-:-:1      FFMA R56, R71.reuse, R78, R56;
+--:-:-:-:1      FFMA R58, R71.reuse, R76.reuse, R58;
+--:-:-:-:1      FFMA R59, R70.reuse, R76, R59;
+--:-:-:-:1      FFMA R29, R70.reuse, R75.reuse, R29;
+--:-:-:-:1      FFMA R28, R71.reuse, R75, R28;
+--:-:-:-:1      FFMA R30, R71.reuse, R73.reuse, R30;
+--:-:-:-:1      FFMA R31, R70.reuse, R73, R31;
+--:-:-:-:1      FFMA R25, R70.reuse, R74.reuse, R25;
+--:-:-:-:1      FFMA R24, R71.reuse, R74, R24;
+--:-:-:-:1      FFMA R26, R71, R72.reuse, R26;
+--:-:-:-:1      FFMA R27, R70, R72, R27;
+--:-:-:-:1      FFMA R0, R81.reuse, R90, R0;
+--:-:-:-:1      FFMA R3, R80.reuse, R88, R3;
+--:-:-:-:1      FFMA R4, R81.reuse, R91, R4;
+--:-:-:-:1      FFMA R7, R80.reuse, R89, R7;
+--:-:-:-:1      FFMA R33, R80.reuse, R94.reuse, R33;
+--:-:-:-:1      FFMA R32, R81.reuse, R94, R32;
+--:-:-:-:1      FFMA R34, R81.reuse, R92.reuse, R34;
+--:-:-:-:1      FFMA R35, R80.reuse, R92, R35;
+--:-:-:-:1      FFMA R37, R80.reuse, R95.reuse, R37;
+--:-:-:-:1      FFMA R36, R81.reuse, R95.reuse, R36;
+--:-:-:-:1      FFMA R38, R81, R93.reuse, R38;
+--:-:-:-:1      FFMA R39, R80, R93.reuse, R39;
+--:-:-:-:1      FFMA R45, R82.reuse, R95.reuse, R45;
+--:-:-:-:1      FFMA R44, R83.reuse, R95, R44;
+--:-:-:-:1      FFMA R46, R83.reuse, R93.reuse, R46;
+--:-:-:-:1      FFMA R47, R82.reuse, R93, R47;
+--:-:-:-:1      FFMA R41, R82.reuse, R94.reuse, R41;
+--:-:-:-:1      FFMA R40, R83.reuse, R94, R40;
+--:-:-:-:1      FFMA R42, R83.reuse, R92.reuse, R42;
+--:-:-:-:1      FFMA R43, R82.reuse, R92, R43;
+--:-:-:-:1      FFMA R13, R82.reuse, R91.reuse, R13;
+--:-:-:-:1      FFMA R12, R83.reuse, R91, R12;
+--:-:-:-:1      FFMA R14, R83.reuse, R89.reuse, R14;
+--:-:-:-:1      FFMA R15, R82.reuse, R89, R15;
+--:-:-:-:1      FFMA R9, R82.reuse, R90.reuse, R9;
+--:-:-:-:1      FFMA R8, R83.reuse, R90.reuse, R8;
+--:-:-:-:1      FFMA R10, R83, R88.reuse, R10;
+--:-:-:-:1      FFMA R11, R82, R88.reuse, R11;
+--:-:-:Y:1      FFMA R17, R84.reuse, R90.reuse, R17;
+--:-:-:-:1      FFMA R16, R85.reuse, R90, R16;
+--:-:-:-:1      FFMA R18, R85.reuse, R88.reuse, R18;
+--:-:-:-:1      FFMA R19, R84.reuse, R88, R19;
+--:-:-:-:1      FFMA R21, R84.reuse, R91.reuse, R21;
+--:-:-:-:1      FFMA R20, R85.reuse, R91, R20;
+--:-:-:-:1      FFMA R22, R85.reuse, R89.reuse, R22;
+--:-:-:-:1      FFMA R23, R84.reuse, R89, R23;
+--:-:-:-:1      FFMA R49, R84.reuse, R94.reuse, R49;
+--:-:-:-:1      FFMA R48, R85.reuse, R94, R48;
+--:-:-:-:1      FFMA R50, R85.reuse, R92.reuse, R50;
+--:-:-:-:1      FFMA R51, R84.reuse, R92, R51;
+--:-:-:-:1      FFMA R53, R84.reuse, R95.reuse, R53;
+--:-:-:-:1      FFMA R52, R85.reuse, R95.reuse, R52;
+--:-:-:-:1      FFMA R54, R85, R93.reuse, R54;
+--:-:-:-:1      FFMA R55, R84, R93.reuse, R55;
+--:-:-:-:1      FFMA R61, R86.reuse, R95.reuse, R61;
+--:-:-:-:1      FFMA R60, R87.reuse, R95, R60;
+--:-:-:-:1      FFMA R62, R87.reuse, R93.reuse, R62;
+--:-:-:-:1      FFMA R63, R86.reuse, R93, R63;
+--:-:-:-:1      FFMA R57, R86.reuse, R94.reuse, R57;
+--:-:-:-:1      FFMA R56, R87.reuse, R94, R56;
+--:-:-:-:1      FFMA R58, R87.reuse, R92.reuse, R58;
+--:-:-:-:1      FFMA R59, R86.reuse, R92, R59;
+--:-:-:-:1      FFMA R29, R86.reuse, R91.reuse, R29;
+--:-:-:-:1      FFMA R28, R87.reuse, R91, R28;
+--:-:-:-:1      FFMA R30, R87.reuse, R89.reuse, R30;
+--:-:-:-:1      FFMA R31, R86.reuse, R89, R31;
+--:-:-:-:1      FFMA R25, R86.reuse, R90.reuse, R25;
+--:-:-:-:1      FFMA R24, R87.reuse, R90, R24;
+--:-:-:-:1      FFMA R26, R87, R88.reuse, R26;
+--:-:-:-:1      FFMA R27, R86, R88, R27;
+2f:6:3:-:0      FFMA R0, R65.reuse, R74, R0;
+2f:5:3:-:8      FFMA R3, R64.reuse, R72, R3;
+2f:6:3:-:4      FFMA R4, R65.reuse, R75, R4;
+2f:5:3:-:c      FFMA R7, R64.reuse, R73, R7;
+--:6:5:Y:0      FFMA R33, R64.reuse, R78.reuse, R33;
+--:-:-:-:1      FFMA R37, R64.reuse, R79.reuse, R37;
+--:-:-:-:1      FFMA R36, R65.reuse, R79.reuse, R36;
+--:-:-:-:1      FFMA R38, R65, R77.reuse, R38;
+--:-:-:-:1      FFMA R39, R64, R77.reuse, R39;
+--:-:-:-:1      FFMA R45, R66.reuse, R79.reuse, R45;
+--:-:-:-:1      FFMA R44, R67.reuse, R79, R44;
+--:-:-:-:1      FFMA R46, R67.reuse, R77.reuse, R46;
+--:-:-:-:1      FFMA R47, R66.reuse, R77, R47;
+--:-:-:-:1      FFMA R41, R66.reuse, R78.reuse, R41;
+--:-:-:-:1      FFMA R40, R67.reuse, R78, R40;
+--:-:-:-:1      FFMA R42, R67.reuse, R76.reuse, R42;
+--:-:-:-:1      FFMA R43, R66.reuse, R76, R43;
+--:-:-:-:1      FFMA R13, R66.reuse, R75.reuse, R13;
+--:-:-:-:1      FFMA R12, R67.reuse, R75, R12;
+--:-:-:-:1      FFMA R14, R67.reuse, R73.reuse, R14;
+--:-:-:-:1      FFMA R15, R66.reuse, R73, R15;
+--:-:-:-:1      FFMA R9, R66.reuse, R74.reuse, R9;
+--:-:-:-:1      FFMA R8, R67.reuse, R74.reuse, R8;
+--:-:-:-:1      FFMA R10, R67, R72.reuse, R10;
+--:-:-:-:1      FFMA R11, R66, R72.reuse, R11;
+--:-:-:Y:1      FFMA R17, R68.reuse, R74.reuse, R17;
+--:-:-:-:1      FFMA R16, R69.reuse, R74, R16;
+--:-:-:-:1      FFMA R18, R69.reuse, R72.reuse, R18;
+--:-:-:-:1      FFMA R19, R68.reuse, R72, R19;
+--:-:-:-:1      FFMA R21, R68.reuse, R75.reuse, R21;
+--:-:-:-:1      FFMA R20, R69.reuse, R75, R20;
+--:-:-:-:1      FFMA R22, R69.reuse, R73.reuse, R22;
+--:-:-:-:1      FFMA R23, R68.reuse, R73, R23;
+--:-:-:-:1      FFMA R49, R68.reuse, R78.reuse, R49;
+--:-:-:-:1      FFMA R48, R69.reuse, R78, R48;
+--:-:-:-:1      FFMA R50, R69.reuse, R76.reuse, R50;
+--:-:-:-:1      FFMA R51, R68.reuse, R76, R51;
+--:-:-:-:1      FFMA R53, R68.reuse, R79.reuse, R53;
+--:-:-:-:1      FFMA R52, R69.reuse, R79.reuse, R52;
+--:-:-:-:1      FFMA R54, R69, R77.reuse, R54;
+--:-:-:-:1      FFMA R55, R68, R77.reuse, R55;
+--:-:-:-:1      FFMA R61, R70.reuse, R79.reuse, R61;
+--:-:-:-:1      FFMA R60, R71.reuse, R79, R60;
+--:-:-:-:1      FFMA R62, R71.reuse, R77.reuse, R62;
+--:-:-:-:1      FFMA R63, R70.reuse, R77, R63;
+--:-:-:-:1      FFMA R57, R70.reuse, R78.reuse, R57;
+--:-:-:-:1      FFMA R56, R71.reuse, R78, R56;
+--:-:-:-:1      FFMA R58, R71.reuse, R76.reuse, R58;
+--:-:-:-:1      FFMA R59, R70.reuse, R76, R59;
+--:-:-:-:1      FFMA R29, R70.reuse, R75.reuse, R29;
+--:-:-:-:1      FFMA R28, R71.reuse, R75, R28;
+--:-:-:-:1      FFMA R30, R71.reuse, R73.reuse, R30;
+--:-:-:-:1      FFMA R31, R70.reuse, R73, R31;
+--:-:-:-:1      FFMA R25, R70.reuse, R74.reuse, R25;
+--:-:-:-:1      FFMA R24, R71.reuse, R74, R24;
+--:-:-:-:1      FFMA R26, R71, R72.reuse, R26;
+--:-:-:-:1      FFMA R27, R70, R72, R27;
+--:-:-:-:1      FFMA R0, R81.reuse, R90, R0;
+--:-:-:-:1      FFMA R3, R80.reuse, R88, R3;
+--:-:-:-:1      FFMA R4, R81.reuse, R91, R4;
+--:-:-:-:1      FFMA R7, R80.reuse, R89, R7;
+--:-:-:-:1      FFMA R33, R80.reuse, R94.reuse, R33;
+--:-:-:-:1      FFMA R32, R81.reuse, R94, R32;
+--:-:-:-:1      FFMA R34, R81.reuse, R92.reuse, R34;
+--:-:-:-:1      FFMA R35, R80.reuse, R92, R35;
+--:-:-:-:1      FFMA R37, R80.reuse, R95.reuse, R37;
+--:-:-:-:1      FFMA R36, R81.reuse, R95.reuse, R36;
+--:-:-:-:1      FFMA R38, R81, R93.reuse, R38;
+--:-:-:-:1      FFMA R39, R80, R93.reuse, R39;
+--:-:-:-:1      FFMA R45, R82.reuse, R95.reuse, R45;
+--:-:-:-:1      FFMA R44, R83.reuse, R95, R44;
+--:-:-:-:1      FFMA R46, R83.reuse, R93.reuse, R46;
+--:-:-:-:1      FFMA R47, R82.reuse, R93, R47;
+--:-:-:-:1      FFMA R41, R82.reuse, R94.reuse, R41;
+--:-:-:-:1      FFMA R40, R83.reuse, R94, R40;
+--:-:-:-:1      FFMA R42, R83.reuse, R92.reuse, R42;
+--:-:-:-:1      FFMA R43, R82.reuse, R92, R43;
+--:-:-:-:1      FFMA R13, R82.reuse, R91.reuse, R13;
+--:-:-:-:1      FFMA R12, R83.reuse, R91, R12;
+--:-:-:-:1      FFMA R14, R83.reuse, R89.reuse, R14;
+--:-:-:-:1      FFMA R15, R82.reuse, R89, R15;
+--:-:-:-:1      FFMA R9, R82.reuse, R90.reuse, R9;
+--:-:-:-:1      FFMA R8, R83.reuse, R90.reuse, R8;
+--:-:-:-:1      FFMA R10, R83, R88.reuse, R10;
+--:-:-:-:1      FFMA R11, R82, R88.reuse, R11;
+--:-:-:Y:1      FFMA R17, R84.reuse, R90.reuse, R17;
+--:-:-:-:1      FFMA R16, R85.reuse, R90, R16;
+--:-:-:-:1      FFMA R18, R85.reuse, R88.reuse, R18;
+--:-:-:-:1      FFMA R19, R84.reuse, R88, R19;
+--:-:-:-:1      FFMA R21, R84.reuse, R91.reuse, R21;
+--:-:-:-:1      FFMA R20, R85.reuse, R91, R20;
+--:-:-:-:1      FFMA R22, R85.reuse, R89.reuse, R22;
+--:-:-:-:1      FFMA R23, R84.reuse, R89, R23;
+--:-:-:-:1      FFMA R49, R84.reuse, R94.reuse, R49;
+--:-:-:-:1      FFMA R48, R85.reuse, R94, R48;
+--:-:-:-:1      FFMA R50, R85.reuse, R92.reuse, R50;
+--:-:-:-:1      FFMA R51, R84.reuse, R92, R51;
+--:-:-:-:1      FFMA R53, R84.reuse, R95.reuse, R53;
+--:-:-:-:1      FFMA R52, R85.reuse, R95.reuse, R52;
+--:-:-:-:1      FFMA R54, R85, R93.reuse, R54;
+--:-:-:-:1      FFMA R55, R84, R93.reuse, R55;
+--:-:-:-:1      FFMA R61, R86.reuse, R95.reuse, R61;
+--:-:-:-:1      FFMA R60, R87.reuse, R95, R60;
+--:-:-:-:1      FFMA R62, R87.reuse, R93.reuse, R62;
+--:-:-:-:1      FFMA R63, R86.reuse, R93, R63;
+--:-:-:-:1      FFMA R57, R86.reuse, R94.reuse, R57;
+--:-:-:-:1      FFMA R56, R87.reuse, R94, R56;
+--:-:-:-:1      FFMA R58, R87.reuse, R92.reuse, R58;
+--:-:-:-:1      FFMA R59, R86.reuse, R92, R59;
+--:-:-:-:1      FFMA R29, R86.reuse, R91.reuse, R29;
+--:-:-:-:1      FFMA R28, R87.reuse, R91, R28;
+--:-:-:-:1      FFMA R30, R87.reuse, R89.reuse, R30;
+--:-:-:-:1      FFMA R31, R86.reuse, R89, R31;
+--:-:-:-:1      FFMA R25, R86.reuse, R90.reuse, R25;
+--:-:-:-:1      FFMA R24, R87.reuse, R90, R24;
+--:-:-:-:1      FFMA R26, R87, R88.reuse, R26;
+--:-:-:-:1      FFMA R27, R86, R88, R27;
+--:-:-:-:1      FFMA R0, R65.reuse, R74, R0;
+--:-:-:-:1      FFMA R3, R64.reuse, R72, R3;
+--:-:-:-:1      FFMA R4, R65.reuse, R75, R4;
+--:-:-:-:1      FFMA R7, R64.reuse, R73, R7;
+--:-:-:-:1      FFMA R32, R65.reuse, R78, R32;
+--:-:-:-:1      FFMA R34, R65.reuse, R76.reuse, R34;
+--:-:-:-:1      FFMA R35, R64.reuse, R76, R35;
+--:-:-:-:1      FFMA R37, R64.reuse, R79.reuse, R37;
+--:-:-:-:1      FFMA R36, R65.reuse, R79.reuse, R36;
+--:-:-:-:1      FFMA R38, R65, R77.reuse, R38;
+--:-:-:-:1      FFMA R39, R64, R77.reuse, R39;
+--:-:-:-:1      FFMA R45, R66.reuse, R79.reuse, R45;
+--:-:-:-:1      FFMA R44, R67.reuse, R79, R44;
+--:-:-:-:1      FFMA R46, R67.reuse, R77.reuse, R46;
+--:-:-:-:1      FFMA R47, R66.reuse, R77, R47;
+--:-:-:-:1      FFMA R41, R66.reuse, R78.reuse, R41;
+--:-:-:-:1      FFMA R40, R67.reuse, R78, R40;
+--:-:-:-:1      FFMA R42, R67.reuse, R76.reuse, R42;
+--:-:-:-:1      FFMA R43, R66.reuse, R76, R43;
+--:-:-:-:1      FFMA R13, R66.reuse, R75.reuse, R13;
+--:-:-:-:1      FFMA R12, R67.reuse, R75, R12;
+--:-:-:-:1      FFMA R14, R67.reuse, R73.reuse, R14;
+--:-:-:-:1      FFMA R15, R66.reuse, R73, R15;
+--:-:-:-:1      FFMA R9, R66.reuse, R74.reuse, R9;
+--:-:-:-:1      FFMA R8, R67.reuse, R74.reuse, R8;
+--:-:-:-:1      FFMA R10, R67, R72.reuse, R10;
+--:-:-:-:1      FFMA R11, R66, R72.reuse, R11;
+--:-:-:Y:1      FFMA R17, R68.reuse, R74.reuse, R17;
+--:-:-:-:1      FFMA R16, R69.reuse, R74, R16;
+--:-:-:-:1      FFMA R18, R69.reuse, R72.reuse, R18;
+--:-:-:-:1      FFMA R19, R68.reuse, R72, R19;
+--:-:-:-:1      FFMA R21, R68.reuse, R75.reuse, R21;
+--:-:-:-:1      FFMA R20, R69.reuse, R75, R20;
+--:-:-:-:1      FFMA R22, R69.reuse, R73.reuse, R22;
+--:-:-:-:1      FFMA R23, R68.reuse, R73, R23;
+--:-:-:-:1      FFMA R49, R68.reuse, R78.reuse, R49;
+--:-:-:-:1      FFMA R48, R69.reuse, R78, R48;
+--:-:-:-:1      FFMA R50, R69.reuse, R76.reuse, R50;
+--:-:-:-:1      FFMA R51, R68.reuse, R76, R51;
+--:-:-:-:1      FFMA R53, R68.reuse, R79.reuse, R53;
+--:-:-:-:1      FFMA R52, R69.reuse, R79.reuse, R52;
+--:-:-:-:1      FFMA R54, R69, R77.reuse, R54;
+--:-:-:-:1      FFMA R55, R68, R77.reuse, R55;
+--:-:-:-:1      FFMA R61, R70.reuse, R79.reuse, R61;
+--:-:-:-:1      FFMA R60, R71.reuse, R79, R60;
+--:-:-:-:1      FFMA R62, R71.reuse, R77.reuse, R62;
+--:-:-:-:1      FFMA R63, R70.reuse, R77, R63;
+--:-:-:-:1      FFMA R57, R70.reuse, R78.reuse, R57;
+--:-:-:-:1      FFMA R56, R71.reuse, R78, R56;
+--:-:-:-:1      FFMA R58, R71.reuse, R76.reuse, R58;
+--:-:-:-:1  @P1 LEA R96.CC, R111.reuse, param_3[0], 0x2;
+--:-:-:-:1      FFMA R59, R70.reuse, R76, R59;
+--:-:-:-:1      FFMA R29, R70.reuse, R75.reuse, R29;
+--:-:-:-:1      FFMA R28, R71.reuse, R75, R28;
+--:-:-:-:1      FFMA R30, R71.reuse, R73.reuse, R30;
+--:-:-:-:1      FFMA R31, R70.reuse, R73, R31;
+--:-:-:-:1  @P1 LEA.HI.X R97, R111, param_3[1], RZ, 0x2;
+--:-:-:-:1      FFMA R25, R70.reuse, R74.reuse, R25;
+--:-:-:-:1      FFMA R27, R70, R72, R27;
+--:-:-:-:1      FFMA R0, R81.reuse, R90, R0;
+--:-:-:-:1      FFMA R3, R80.reuse, R88, R3;
+--:-:-:-:1      FFMA R4, R81.reuse, R91, R4;
+--:-:-:-:1      FFMA R7, R80.reuse, R89, R7;
+--:-:-:-:1      FFMA R33, R80.reuse, R94.reuse, R33;
+--:-:-:-:1      FFMA R32, R81.reuse, R94, R32;
+--:-:-:-:1      FFMA R34, R81.reuse, R92.reuse, R34;
+--:-:-:-:1      FFMA R35, R80.reuse, R92, R35;
+--:-:-:-:1      FFMA R37, R80.reuse, R95.reuse, R37;
+--:-:-:-:1      FFMA R36, R81.reuse, R95.reuse, R36;
+--:-:-:-:1      FFMA R38, R81, R93.reuse, R38;
+--:-:-:-:1      FFMA R39, R80, R93.reuse, R39;
+--:-:-:-:1      FFMA R45, R82.reuse, R95.reuse, R45;
+--:-:-:-:1      FFMA R44, R83.reuse, R95, R44;
+--:-:-:-:1      FFMA R46, R83.reuse, R93.reuse, R46;
+--:-:-:-:1      FFMA R47, R82.reuse, R93, R47;
+--:-:-:-:1      FFMA R41, R82.reuse, R94.reuse, R41;
+--:-:-:-:1      FFMA R40, R83.reuse, R94, R40;
+--:-:-:-:1      FFMA R42, R83.reuse, R92.reuse, R42;
+--:-:-:-:1      FFMA R43, R82.reuse, R92, R43;
+--:-:-:-:1      FFMA R13, R82.reuse, R91.reuse, R13;
+--:-:-:-:1      FFMA R12, R83.reuse, R91, R12;
+--:-:-:-:1      FFMA R14, R83.reuse, R89.reuse, R14;
+--:-:-:-:1      FFMA R15, R82.reuse, R89, R15;
+--:-:-:-:1      FFMA R9, R82.reuse, R90.reuse, R9;
+--:-:-:-:1      FFMA R8, R83.reuse, R90.reuse, R8;
+--:-:-:-:1      FFMA R10, R83, R88.reuse, R10;
+--:-:-:-:1      FFMA R11, R82, R88.reuse, R11;
+--:-:-:Y:1      FFMA R17, R84.reuse, R90.reuse, R17;
+--:-:-:-:1      FFMA R16, R85.reuse, R90, R16;
+--:-:-:-:1      FFMA R18, R85.reuse, R88.reuse, R18;
+--:-:-:-:1      FFMA R19, R84.reuse, R88, R19;
+--:-:-:-:1      FFMA R21, R84.reuse, R91.reuse, R21;
+--:-:-:-:1      FFMA R20, R85.reuse, R91, R20;
+--:-:-:-:1      FFMA R22, R85.reuse, R89.reuse, R22;
+--:-:-:-:1      FFMA R23, R84.reuse, R89, R23;
+--:-:-:-:1      FFMA R49, R84.reuse, R94.reuse, R49;
+--:-:-:-:1      FFMA R48, R85.reuse, R94, R48;
+--:-:-:-:1      FFMA R50, R85.reuse, R92.reuse, R50;
+--:-:-:-:1      FFMA R51, R84.reuse, R92, R51;
+--:-:-:-:1      FFMA R53, R84.reuse, R95.reuse, R53;
+--:-:-:-:1      FFMA R52, R85.reuse, R95.reuse, R52;
+--:-:-:-:1      FFMA R54, R85, R93.reuse, R54;
+--:-:-:-:1      FFMA R55, R84, R93.reuse, R55;
+--:-:-:-:1      FFMA R61, R86.reuse, R95.reuse, R61;
+--:-:-:-:1      FFMA R60, R87.reuse, R95, R60;
+--:-:-:-:1      FFMA R62, R87.reuse, R93.reuse, R62;
+--:-:-:-:1      FFMA R63, R86.reuse, R93, R63;
+--:-:-:-:1      FFMA R57, R86.reuse, R94.reuse, R57;
+--:-:-:-:1      FFMA R56, R87.reuse, R94, R56;
+--:-:-:-:1      FFMA R58, R87.reuse, R92.reuse, R58;
+--:-:-:-:1      FFMA R59, R86.reuse, R92, R59;
+--:-:-:-:1      FFMA R29, R86.reuse, R91.reuse, R29;
+--:-:-:-:1      FFMA R28, R87.reuse, R91, R28;
+--:-:-:-:1      FFMA R30, R87.reuse, R89.reuse, R30;
+--:-:-:-:1      FFMA R31, R86.reuse, R89, R31;
+--:-:-:-:1      FFMA R25, R86.reuse, R90.reuse, R25;
+--:-:-:-:1      FFMA R24, R87.reuse, R90, R24;
+--:-:-:-:1      FFMA R26, R87, R88.reuse, R26;
+--:1:5:Y:f      LDS.U.128 R64, [0x4010];
+3e:5:1:-:4      LOP.AND R116, R123.reuse, 0x7;
+--:-:-:-:1      LOP.AND R125, R125, 0x1ff;
+--:-:-:-:1      LOP.AND R124, R124, 0xff;
+--:-:-:-:1      SHL R116, R116, 0x2;
+--:-:-:-:1      MOV R104, param_5;
+--:-:-:-:1      SHR.U32 R105, R105, 0x1;
+--:-:-:-:1      MOV32I R110, 0x3f800000;
+--:-:-:-:2      SHR.U32 R112, R112, 0x3;
+--:-:-:-:2      ISCADD R119, R124, R125, 0x5;
+--:-:-:Y:6      LOP.OR R116, R116, R105;
+--:-:-:-:2      ISCADD R108, R126, R116.reuse, 0x7;
+--:-:-:-:2      ISCADD R113, R112, R116, 0x7;
+--:-:-:-:2      SHL R112, R112, 0x2;
+01:-:-:-:1      XMAD R106, R66, param_8, R108;
+--:-:-:-:1      ISETP.LT.AND P0, PT, R108, param_8, P2;
+--:-:-:-:1      IADD R108, R108, 0x20;
+--:-:-:-:2      SHL R113, R113, 0x2;
+01:-:-:-:1      ISCADD R120, R67, R112, 0x7;
+--:-:-:-:2      XMAD R106, R65.reuse, param_47, R106;
+--:-:-:-:4      ISETP.LT.AND P1, PT, R108, param_8, P2;
+--:-:-:Y:6      XMAD.PSL R106, R65, param_47.H1, R106;
+--:-:-:Y:6      XMAD R106, R64.reuse, param_48, R106;
+--:-:-:-:1      XMAD.PSL R106, R64, param_48.H1, R106;
+--:-:-:-:5      BAR.SYNC 0x0;
+--:-:-:-:1      FMUL R72, R3, R104.reuse;
+--:-:-:-:1      FMUL R73, R2, R104.reuse;
+--:-:-:-:1      FMUL R74, R11, R104.reuse;
+--:-:-:-:1      FMUL R75, R10, R104.reuse;
+--:-:-:-:1      FMUL R76, R19, R104.reuse;
+--:-:-:-:1      FMUL R77, R18, R104.reuse;
+--:-:-:-:1      FMUL R78, R27, R104.reuse;
+--:-:-:-:1      IADD R120, R120, 0x1;
+--:-:-:-:1      FMUL R72, R7, R104.reuse;
+--:-:-:-:1      FMUL R73, R6, R104.reuse;
+--:-:-:-:1      FMUL R74, R15, R104.reuse;
+--:-:-:-:1      FMUL R75, R14, R104.reuse;
+--:-:-:-:1      FMUL R76, R23, R104.reuse;
+--:-:-:-:1      FMUL R77, R22, R104.reuse;
+--:-:-:-:1      FMUL R78, R31, R104.reuse;
+--:-:-:-:1      IADD R120, R120, 0x1;
+--:-:-:-:1      FMUL R72, R1, R104.reuse;
+--:-:-:-:1      FMUL R73, R0, R104.reuse;
+--:-:-:-:1      FMUL R74, R9, R104.reuse;
+--:-:-:-:1      FMUL R75, R8, R104.reuse;
+--:-:-:-:1      FMUL R76, R17, R104.reuse;
+--:-:-:-:1      FMUL R77, R16, R104.reuse;
+--:-:-:-:1      FMUL R78, R25, R104.reuse;
+--:1:3:Y:0      IADD R120, R120, 0x1;
+--:2:1:-:0      FMUL R72, R5, R104.reuse;
+--:-:-:-:1      FMUL R76, R21, R104.reuse;
+--:-:-:-:1      FMUL R77, R20, R104.reuse;
+--:-:-:-:1      FMUL R78, R29, R104.reuse;
+--:-:-:-:1      IADD R120, R120, 0x3d;
+--:-:-:-:1      FMUL R72, R35, R104.reuse;
+--:-:-:-:1      FMUL R73, R34, R104.reuse;
+--:-:-:-:1      FMUL R74, R43, R104.reuse;
+--:-:-:-:1      FMUL R75, R42, R104.reuse;
+--:-:-:-:1      FMUL R76, R51, R104.reuse;
+--:-:-:-:1      FMUL R77, R50, R104.reuse;
+--:-:-:-:1      FMUL R78, R59, R104.reuse;
+--:-:-:-:1      IADD R120, R120, 0x1;
+--:-:-:-:1      FMUL R72, R39, R104.reuse;
+--:-:-:-:1      FMUL R73, R38, R104.reuse;
+--:-:-:-:1      FMUL R74, R47, R104.reuse;
+--:-:-:-:1      FMUL R75, R46, R104.reuse;
+--:-:-:-:1      FMUL R76, R55, R104.reuse;
+--:-:-:-:1      FMUL R77, R54, R104.reuse;
+--:-:-:-:1      FMUL R78, R63, R104.reuse;
+--:1:3:Y:0      IADD R120, R120, 0x1;
+--:1:4:-:0      FMUL R72, R33, R104.reuse;
+--:-:-:-:1      FMUL R76, R49, R104.reuse;
+--:-:-:-:1      FMUL R77, R48, R104.reuse;
+--:-:-:-:1      FMUL R78, R57, R104.reuse;
+--:-:-:-:1      IADD R120, R120, 0x1;
+--:-:-:-:1      FMUL R72, R37, R104.reuse;
+--:-:-:-:1      FMUL R73, R36, R104.reuse;
+--:-:-:-:1      FMUL R74, R45, R104.reuse;
+--:-:-:-:1      FMUL R75, R44, R104.reuse;
+--:-:-:-:1      FMUL R76, R53, R104.reuse;
+--:-:-:-:1      FMUL R77, R52, R104.reuse;
+--:-:-:-:1      FMUL R78, R61, R104.reuse;
+--:-:-:-:5      RET;
+--:-:-:-:4      ISETP.LT.AND P3, PT, R120.reuse, param_9, P1;
+--:-:-:Y:8      XMAD.PSL R109, R120, param_49.H1, R109;
+--:-:1:-:1  @P2 LDS.U.128 R92, [R113];
+--:-:2:-:1  @P3 LDS.U.128 R96, [R113+0x80];
+--:-:-:Y:6      LEA R100.CC, R109.reuse, param_2[0], 0x2;
+--:-:-:-:2      LEA.HI.X R101, R109, param_2[1], RZ, 0x2;
+01:-:-:-:1  @P2 STG.E.CG.128 [R100], R92;
+02:5:-:-:1  @P3 STG.E.CG.128 [R100+0x80], R96;
+--:-:-:-:5      RET;
