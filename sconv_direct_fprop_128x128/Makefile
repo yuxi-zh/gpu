@@ -232,34 +232,32 @@ GENCODE_FLAGS = -arch compute_60 -code sm_60
 
 ALL_CCFLAGS += -dc -std=c++11
 
-LIBRARIES += -lcudart
+LIBRARIES += -lcudart -lcudnn
 
 ifeq ($(SAMPLE_ENABLED),0)
 EXEC ?= @echo "[@]"
 endif
+
+KERNEL = sconv_direct_fprop_128x128
+SASS1 = sconv_xprop_X128_N128.sass
+SASS2 = xconv_xprop_common.sass
 
 ################################################################################
 
 # Target rules
 all: test
 
-# sconv_direct_fprop_128x128_device.cubin: sconv_direct_fprop_128x128_device.ptx
-# 	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -cubin -o $@ $<	
-# 	ptxas -v -arch sm_60 -o $@ -c $^
-# 	# perl -d ~/neon/neon/backends/kernels/maxas/maxas.pl -i -w sconv_direct_fprop_128x128_device.sass $@
-# 	# maxas.pl -i -w sconv_direct_fprop_128x128_device.sass $@
+$(KERNEL)_device.cubin: $(KERNEL)_device.cu
+	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -cubin $<
+	maxas.pl -i -k sconv_direct_fprop_128x128 -Dprop f $(SASS1) $@
 
-sconv_direct_fprop_128x128_device.cubin: sconv_direct_fprop_128x128_device.cu
-	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -cubin -o $@ $<
-	maxas.pl -i -w sconv_direct_fprop_128x128_device.sass $@
-
-sconv_direct_fprop_128x128_device.o: sconv_direct_fprop_128x128_device.cubin
+$(KERNEL)_device.o: $(KERNEL)_device.cubin
 	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -dlink -o $@ $<
 
-sconv_direct_fprop_128x128_test.o: sconv_direct_fprop_128x128_test.cu
-	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ $<
+$(KERNEL)_test.o: $(KERNEL)_test.cu
+	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) -g $(GENCODE_FLAGS) -o $@ $<
 
-test: sconv_direct_fprop_128x128_test.o sconv_direct_fprop_128x128_device.o
+test: $(KERNEL)_test.o $(KERNEL)_device.o
 	$(EXEC) $(NVCC) $(ALL_LDFLAGS) $(GENCODE_FLAGS) -o $@ $+ $(LIBRARIES)
 
 clean:

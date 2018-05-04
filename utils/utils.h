@@ -73,7 +73,7 @@ const char *cublasGetErrorString(cublasStatus_t error)
 	__CHECK_CALL__(CUBLAS, call, cublasStatus_t, CUBLAS_STATUS_SUCCESS, cublasGetErrorString)
 
 #define CHECK_CUDNN_CALL(call) \
-    __CHECK_CALL__(CUDNN, call, cudnnStatus_t, CUDNN_STATUS_SUCCESS, cudnnGetLastErrorString)
+    __CHECK_CALL__(CUDNN, call, cudnnStatus_t, CUDNN_STATUS_SUCCESS, cudnnGetErrorString)
 
 
 // void timing(std::function<void(void)> target)

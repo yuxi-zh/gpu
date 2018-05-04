@@ -34,7 +34,7 @@
 --:-:-:-:6      XMAD R2, R0.reuse, blockDimX, R2;
 --:-:-:-:6      XMAD.PSL.CBCC R2, R0.H1, R3.H1, R2;
 --:-:-:Y:d      ISETP.GE.AND P0, PT, R2, param_2, PT;
---:-:-:-:d  @P0 EXIT;
+--:-:-:-:d  @P0 RET;
 --:-:-:-:1      SHL R0, R2.reuse, 0x2;
 --:-:-:-:5      SHR R6, R2, 0x1e;
 --:-:-:-:6      IADD R2.CC, R0.reuse, param_0[0];
@@ -47,4 +47,4 @@
 --:-:-:-:2      MOV R5, R6;
 08:1:-:-:1      STG.E [R4], R2;
 --:1:-:-:1      STS [R0], R2;
---:-:-:-:f      EXIT;
+--:-:-:-:f      RET;

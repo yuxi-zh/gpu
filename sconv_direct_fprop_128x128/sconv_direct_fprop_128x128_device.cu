@@ -1,4 +1,4 @@
-
+extern "C" {
 __device__ void sconv_direct_fprop_128x128(
     float* param_Sum,
     float* param_X,
@@ -57,6 +57,10 @@ __device__ void sconv_direct_fprop_128x128(
 {
     __shared__ float shared_memory[4106];
     int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < param_MPQN)
-        param_O[threadIdx.x] = param_I[threadIdx.x];
+    if (i < param_MPQN) {
+        shared_memory[i] = param_I[threadIdx.x];
+        param_O[threadIdx.x] = shared_memory[i];
+    }
+}
+
 }

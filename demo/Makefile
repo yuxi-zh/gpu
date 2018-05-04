@@ -247,14 +247,17 @@ demo_global.cubin: demo_global.cu
 	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -cubin -o $@ $<
 
 demo_device.cubin: demo_device.cu
-	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -cubin -o $@ $<	
-	maxas.pl -i demo_device.sass $@
+	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -cubin -o $@ $<
 
-demo_device.o: demo_device.cubin
+demo_device_new.cubin: demo_global.cubin demo_device.cubin
+	# ../g2d/g2d $^ _Z9GlobalCpyPfS_i _Z9DeviceCpyPfS_i $@
+	maxas.pl -i demo_device.sass demo_device.cubin $@
+
+demo_device.o: demo_device_new.cubin
 	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -dlink -o $@ $<
 
 demo_test.o: demo_test.cu
-	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -o $@ $<
+	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) -g $(GENCODE_FLAGS) -o $@ $<
 
 test: demo_test.o demo_device.o
 	$(EXEC) $(NVCC) $(ALL_LDFLAGS) $(GENCODE_FLAGS) -o $@ $+ $(LIBRARIES)

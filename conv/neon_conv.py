@@ -116,6 +116,32 @@ def timing_conv_layer(config):
 
     print(time / 10)
 
-for config in configs:
-    print(config, end=' ')
-    timing_conv_layer(config)
+def test_sconv_direct_fprop_128x128():
+
+    N, C, K = 128, 4, 128
+    D, H, W = 1, 128, 128
+    T, R, S = 1, 3, 3
+    pad_d, pad_h, pad_w = 0, 0, 0
+    str_d, str_h, str_w = 1, 1, 1
+    dil_d, dil_h, dil_w = 1, 1, 1
+
+    be = gen_backend('gpu', batch_size=N)
+    conv_layer = Convolution((T, R, S, K),
+        strides={'str_d':str_d, 'str_h':str_h, 'str_w':str_w},
+        padding={'pad_d':pad_d, 'pad_h':pad_h, 'pad_w':pad_w},
+        init=Gaussian())
+
+    conv_layer.configure((C, D, H, W))
+    print(conv_layer.out_shape)
+    print(type(conv_layer.nglayer.fprop_kernels))
+    print(conv_layer.nglayer.fprop_kernels.kernel_args)
+    print(conv_layer.nglayer.fprop_kernels.kernel_name)
+
+    conv_layer.allocate()
+    I = GPUTensor(be, (C, D, H, W, N))
+    conv_layer.fprop(I, inference=True)    
+#for config in configs:
+#    print(config, end=' ')
+#    timing_conv_layer(config)
+
+test_sconv_direct_fprop_128x128()

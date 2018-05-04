@@ -1,0 +1,206 @@
+
+64bit elf: type=1, abi=7, sm=60, toolkit=80, flags = 0x3c0d3c
+Sections:
+Index Offset   Size ES Align   Type   Flags Link     Info Name
+    1     40    17d  0  1    STRTAB       0    0        0 .shstrtab
+    2    1bd    289  0  1    STRTAB       0    0        0 .strtab
+    3    448    1c8 18  8    SYMTAB       0    2       11 .symtab
+    4    610     a8  0  4 CUDA_INFO       0    3        0 .nv.info
+    5    6b8      8  0  4 CUDA_INFO       0    3        a .nv.info._Z9DeviceCpyPfS_i
+    6    6c0     18  8  4 CUDA_CALLGRAPH       0    3        0 .nv.callgraph
+    7    6d8     38  8  4 CUDA_PROTOTYPE       0    3        0 .nv.prototype
+    8    710     10 10  8       REL       0    3        a .rel.text._Z9DeviceCpyPfS_i
+    9    720     40  0 20  PROGBITS       6    3  5000001 .text.cudaDeviceGetAttribute
+    a    760    100  0 20  PROGBITS       6    3  7000012 .text._Z9DeviceCpyPfS_i
+    b    860     40  0 20  PROGBITS       6    3  5000006 .text.cudaMalloc
+    c    8a0     40  0 20  PROGBITS       6    3  5000008 .text.cudaOccupancyMaxActiveBlocksPerMultiprocessor
+    d    8e0     40  0 20  PROGBITS       6    3  500000a .text.cudaGetDevice
+    e    920     40  0 20  PROGBITS       6    3  500000c .text.cudaFuncGetAttributes
+    f    960     40  0 20  PROGBITS       6    3  500000e .text.cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags
+   10    9a0    400  0  4    NOBITS       3    0        0 .nv_debug.shared
+
+.section .strtab
+
+.section .shstrtab
+
+.section .symtab
+ index           value           size      info    other  shndx    name  
+   0               0               0        0        0      0     (null)
+   1               0              64       22        0      9     cudaDeviceGetAttribute
+   2               0               0        3        0      9     .text.cudaDeviceGetAttribute
+   3               0               0        3        0      a     .text._Z9DeviceCpyPfS_i
+   4               0               0        3        0     10     .nv_debug.shared
+   5               4            1024        d       40     10     $___ZZ9DeviceCpyPfS_iE13shared_memory__116
+   6               0              64       22        0      b     cudaMalloc
+   7               0               0        3        0      b     .text.cudaMalloc
+   8               0              64       22        0      c     cudaOccupancyMaxActiveBlocksPerMultiprocessor
+   9               0               0        3        0      c     .text.cudaOccupancyMaxActiveBlocksPerMultiprocessor
+  10               0              64       22        0      d     cudaGetDevice
+  11               0               0        3        0      d     .text.cudaGetDevice
+  12               0              64       22        0      e     cudaFuncGetAttributes
+  13               0               0        3        0      e     .text.cudaFuncGetAttributes
+  14               0              64       22        0      f     cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags
+  15               0               0        3        0      f     .text.cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags
+  16               0               0        3        0      6     .nv.callgraph
+  17               0               0        3        0      7     .nv.prototype
+  18               0             256       12        0      a     _Z9DeviceCpyPfS_i
+
+
+.nv.info
+	<0x1>
+	Attribute:	EIATTR_MAX_STACK_SIZE
+	Format:	EIFMT_SVAL
+	Value:	0xe 0x0 
+	<0x2>
+	Attribute:	EIATTR_FRAME_SIZE
+	Format:	EIFMT_SVAL
+	Value:	function: cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(0xe)	frame size: 0x0
+	<0x3>
+	Attribute:	EIATTR_MAX_STACK_SIZE
+	Format:	EIFMT_SVAL
+	Value:	0xc 0x0 
+	<0x4>
+	Attribute:	EIATTR_FRAME_SIZE
+	Format:	EIFMT_SVAL
+	Value:	function: cudaFuncGetAttributes(0xc)	frame size: 0x0
+	<0x5>
+	Attribute:	EIATTR_MAX_STACK_SIZE
+	Format:	EIFMT_SVAL
+	Value:	0xa 0x0 
+	<0x6>
+	Attribute:	EIATTR_FRAME_SIZE
+	Format:	EIFMT_SVAL
+	Value:	function: cudaGetDevice(0xa)	frame size: 0x0
+	<0x7>
+	Attribute:	EIATTR_MAX_STACK_SIZE
+	Format:	EIFMT_SVAL
+	Value:	0x8 0x0 
+	<0x8>
+	Attribute:	EIATTR_FRAME_SIZE
+	Format:	EIFMT_SVAL
+	Value:	function: cudaOccupancyMaxActiveBlocksPerMultiprocessor(0x8)	frame size: 0x0
+	<0x9>
+	Attribute:	EIATTR_MAX_STACK_SIZE
+	Format:	EIFMT_SVAL
+	Value:	0x6 0x0 
+	<0x10>
+	Attribute:	EIATTR_FRAME_SIZE
+	Format:	EIFMT_SVAL
+	Value:	function: cudaMalloc(0x6)	frame size: 0x0
+	<0x11>
+	Attribute:	EIATTR_MAX_STACK_SIZE
+	Format:	EIFMT_SVAL
+	Value:	0x12 0x0 
+	<0x12>
+	Attribute:	EIATTR_FRAME_SIZE
+	Format:	EIFMT_SVAL
+	Value:	function: _Z9DeviceCpyPfS_i(0x12)	frame size: 0x0
+	<0x13>
+	Attribute:	EIATTR_MAX_STACK_SIZE
+	Format:	EIFMT_SVAL
+	Value:	0x1 0x0 
+	<0x14>
+	Attribute:	EIATTR_FRAME_SIZE
+	Format:	EIFMT_SVAL
+	Value:	function: cudaDeviceGetAttribute(0x1)	frame size: 0x0
+
+
+.nv.info._Z9DeviceCpyPfS_i
+	<0x1>
+	Attribute:	EIATTR_S2RCTAID_INSTR_OFFSETS
+	Format:	EIFMT_SVAL
+	Value:	0x28 
+
+
+.nv.callgraph
+ <0,-1>
+ <0,-2>
+ <0,-3>
+
+
+.nv.prototype
+ <1,610>
+ <18,585>
+ <6,616>
+ <8,599>
+ <10,606>
+ <12,616>
+ <14,591>
+
+
+.text.cudaDeviceGetAttribute
+bar = 0	reg = 5	lmem=0	smem=0
+0xffe007f0  0x001ffc00  0x01e7f004  0x01000000  
+0x0007000f  0xe3200000  0xff87000f  0xe2400fff  
+0xfc0007e0  0x001f8000  0x00070f00  0x50b00000  
+0x00070f00  0x50b00000  0x00070f00  0x50b00000  
+
+
+
+.text._Z9DeviceCpyPfS_i
+bar = 0	reg = 7	lmem=0	smem=0
+0xe22007f6  0x001c7c00  0x00870001  0x4c980780  
+0x02570000  0xf0c80000  0x02170002  0xf0c80000  
+0xfec20ff1  0x001fd840  0x00270003  0x4f107f80  
+0x00270002  0x4e000100  0x00370002  0x5b300118  
+0xffa007ed  0x081fc400  0x05470207  0x4b6d0380  
+0x0000000f  0xe3000000  0x00270200  0x38480000  
+0xfec007f5  0x001fc840  0x01e70206  0x38290000  
+0x05070002  0x4c108000  0x05170603  0x4c100800  
+0xfc200071  0x001fd400  0x00070202  0xeed42000  
+0x05270004  0x4c108000  0x0007f005  0x01000000  
+0xfea007f1  0x001fc800  0x05370606  0x4c100800  
+0x00570000  0x5c100000  0x00670005  0x5c980780  
+0x1e2040f1  0x001ffc00  0x00070402  0xeedc2000  
+0x00070002  0xef5c0000  0x0007000f  0xe3000000  
+0xfc0007ff  0x001f8000  0xff07000f  0xe2400fff  
+0x00070f00  0x50b00000  0x00070f00  0x50b00000  
+
+
+.section .rel.text._Z9DeviceCpyPfS_i	REL
+216    $___ZZ9DeviceCpyPfS_iE13shared_memory__116    R_CUDA_ABS24_20
+
+
+.text.cudaMalloc
+bar = 0	reg = 5	lmem=0	smem=0
+0xffe007f0  0x001ffc00  0x01e7f004  0x01000000  
+0x0007000f  0xe3200000  0xff87000f  0xe2400fff  
+0xfc0007e0  0x001f8000  0x00070f00  0x50b00000  
+0x00070f00  0x50b00000  0x00070f00  0x50b00000  
+
+
+
+.text.cudaOccupancyMaxActiveBlocksPerMultiprocessor
+bar = 0	reg = 5	lmem=0	smem=0
+0xffe007f0  0x001ffc00  0x01e7f004  0x01000000  
+0x0007000f  0xe3200000  0xff87000f  0xe2400fff  
+0xfc0007e0  0x001f8000  0x00070f00  0x50b00000  
+0x00070f00  0x50b00000  0x00070f00  0x50b00000  
+
+
+
+.text.cudaGetDevice
+bar = 0	reg = 5	lmem=0	smem=0
+0xffe007f0  0x001ffc00  0x01e7f004  0x01000000  
+0x0007000f  0xe3200000  0xff87000f  0xe2400fff  
+0xfc0007e0  0x001f8000  0x00070f00  0x50b00000  
+0x00070f00  0x50b00000  0x00070f00  0x50b00000  
+
+
+
+.text.cudaFuncGetAttributes
+bar = 0	reg = 5	lmem=0	smem=0
+0xffe007f0  0x001ffc00  0x01e7f004  0x01000000  
+0x0007000f  0xe3200000  0xff87000f  0xe2400fff  
+0xfc0007e0  0x001f8000  0x00070f00  0x50b00000  
+0x00070f00  0x50b00000  0x00070f00  0x50b00000  
+
+
+
+.text.cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags
+bar = 0	reg = 5	lmem=0	smem=0
+0xffe007f0  0x001ffc00  0x01e7f004  0x01000000  
+0x0007000f  0xe3200000  0xff87000f  0xe2400fff  
+0xfc0007e0  0x001f8000  0x00070f00  0x50b00000  
+0x00070f00  0x50b00000  0x00070f00  0x50b00000  
+
