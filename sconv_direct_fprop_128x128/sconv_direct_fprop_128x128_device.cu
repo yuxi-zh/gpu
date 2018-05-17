@@ -1,5 +1,5 @@
 extern "C" {
-__device__ void sconv_direct_fprop_128x128(
+__device__ void sconv_direct_fprop_128x128_device(
     float* param_Sum,
     float* param_X,
     float* param_O,

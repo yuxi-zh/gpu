@@ -34,7 +34,7 @@
 ################################################################################
 
 # Location of the CUDA Toolkit
-CUDA_PATH ?= "/usr/local/cuda-8.0"
+CUDA_PATH ?= "/usr/local/cuda"
 
 ##############################
 # start deprecated interface #
@@ -232,7 +232,7 @@ GENCODE_FLAGS = -arch compute_60 -code sm_60
 
 ALL_CCFLAGS += -dc -std=c++11
 
-LIBRARIES += -lcudart -lcudnn
+LIBRARIES += -lcudart -lcudnn -lcuda
 
 ifeq ($(SAMPLE_ENABLED),0)
 EXEC ?= @echo "[@]"
@@ -240,7 +240,7 @@ endif
 
 KERNEL = sconv_direct_fprop_128x128
 SASS1 = sconv_xprop_X128_N128.sass
-SASS2 = xconv_xprop_common.sass
+
 
 ################################################################################
 
@@ -249,9 +249,12 @@ all: test
 
 $(KERNEL)_device.cubin: $(KERNEL)_device.cu
 	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -cubin $<
-	maxas.pl -i -k sconv_direct_fprop_128x128 -Dprop f $(SASS1) $@
+	maxas.pl -i -k sconv_direct_fprop_128x128_device -Dprop f $(SASS1) $@
 
 $(KERNEL)_device.o: $(KERNEL)_device.cubin
+	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -dlink -o $@ $<
+
+$(KERNEL).o: ~/.cache/neon/kernels/cubin/$(KERNEL).cubin
 	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -dlink -o $@ $<
 
 $(KERNEL)_test.o: $(KERNEL)_test.cu

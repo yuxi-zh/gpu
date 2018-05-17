@@ -1,6 +1,7 @@
 
 #include <assert.h>
-#include <cuda_runtime.h>
+#include <cuda.h>
+#include <builtin_types.h>
 #include "utils.h"
 
 #include <tuple>
@@ -12,173 +13,61 @@
 
 using namespace std;
 
-extern "C" __device__ void sconv_direct_fprop_128x128(        
-	float* param_Sum,
-    float* param_X,
-    float* param_O,
-    float* param_I,
-    float* param_F,
-    float param_alpha,
-    float param_beta,
-    unsigned param_flags,
-    unsigned param_N,
-    unsigned param_K,
-    unsigned param_D,
-    unsigned param_H,
-    unsigned param_W,
-    unsigned param_WN,
-    unsigned param_HWN,
-    unsigned param_DHWN,
-    unsigned param_C,
-    unsigned param_KRST,
-    unsigned param_RST,
-    unsigned param_RS,
-    unsigned param_T,
-    unsigned param_R,
-    unsigned param_S,
-    unsigned param_magic_RS,
-    unsigned param_shift_RS,
-    unsigned param_magic_S,
-    unsigned param_shift_S,
-    int param_pad_d,
-    int param_pad_h,
-    int param_pad_w,
-    unsigned param_str_d,
-    unsigned param_str_h,
-    unsigned param_str_w,
-    unsigned param_dil_d,
-    unsigned param_dil_h,
-    unsigned param_dil_w,
-    unsigned param_P2,
-    unsigned param_Q,
-    unsigned param_PQk,
-    unsigned param_Qk,
-    unsigned param_k,
-    unsigned param_magic_PQk,
-    unsigned param_shift_PQk,
-    unsigned param_magic_Qk,
-    unsigned param_shift_Qk,
-    unsigned param_magic_k,
-    unsigned param_shift_k,
-    unsigned param_QN,
-    unsigned param_PQN,
-    unsigned param_MPQN,
-    unsigned param_gridN,
-    unsigned param_gridQN,
-    unsigned param_gridPQN,
-    unsigned param_gridMPQN);
+#define Stringlize(literal) \
+    # literal
 
-__global__ void sconv_direct_fprop_128x128_global(
-	float* param_Sum,
-    float* param_X,
-    float* param_O,
-    float* param_I,
-    float* param_F,
-    float param_alpha,
-    float param_beta,
-    unsigned param_flags,
-    unsigned param_N,
-    unsigned param_K,
-    unsigned param_D,
-    unsigned param_H,
-    unsigned param_W,
-    unsigned param_WN,
-    unsigned param_HWN,
-    unsigned param_DHWN,
-    unsigned param_C,
-    unsigned param_KRST,
-    unsigned param_RST,
-    unsigned param_RS,
-    unsigned param_T,
-    unsigned param_R,
-    unsigned param_S,
-    unsigned param_magic_RS,
-    unsigned param_shift_RS,
-    unsigned param_magic_S,
-    unsigned param_shift_S,
-    int param_pad_d,
-    int param_pad_h,
-    int param_pad_w,
-    unsigned param_str_d,
-    unsigned param_str_h,
-    unsigned param_str_w,
-    unsigned param_dil_d,
-    unsigned param_dil_h,
-    unsigned param_dil_w,
-    unsigned param_P2,
-    unsigned param_Q,
-    unsigned param_PQk,
-    unsigned param_Qk,
-    unsigned param_k,
-    unsigned param_magic_PQk,
-    unsigned param_shift_PQk,
-    unsigned param_magic_Qk,
-    unsigned param_shift_Qk,
-    unsigned param_magic_k,
-    unsigned param_shift_k,
-    unsigned param_QN,
-    unsigned param_PQN,
-    unsigned param_MPQN,
-    unsigned param_gridN,
-    unsigned param_gridQN,
-    unsigned param_gridPQN,
-    unsigned param_gridMPQN) 
+#define Name(postfix) \
+    sconv_direct_fprop_128x128 ## postfix
+
+#define Signature \
+    float* Sum, float* X, float* O, float* I, float* F, \
+    float alpha, float beta, unsigned flags, \
+    unsigned N, unsigned K, unsigned D, unsigned H, unsigned W, \
+    unsigned WN, unsigned HWN, unsigned DHWN, unsigned C, \
+    unsigned KRST, unsigned RST, unsigned RS, unsigned T, \
+    unsigned R, unsigned S, \
+    unsigned magic_RS, unsigned shift_RS, unsigned magic_S, unsigned shift_S, \
+    int pad_d, int pad_h, int pad_w, \
+    unsigned str_d, unsigned str_h, unsigned str_w, \
+    unsigned dil_d, unsigned dil_h, unsigned dil_w, \
+    unsigned P2, unsigned Q, unsigned PQk, unsigned Qk, unsigned k, \
+    unsigned magic_PQk, unsigned shift_PQk, unsigned magic_Qk, unsigned shift_Qk, \
+    unsigned magic_k, unsigned shift_k, \
+    unsigned QN, unsigned PQN, unsigned MPQN, \
+    unsigned gridN, unsigned gridQN, unsigned gridPQN, unsigned gridMPQN
+
+#define GetVar(x) (x)
+#define GetAddr(x) (&(x))
+#define Parameter(O, Macro) \
+    Macro(Sum), Macro(X), Macro(O), Macro(I), Macro(F), \
+    Macro(alpha), Macro(beta), Macro(flags), \
+    Macro(N), Macro(K), Macro(D), Macro(H), Macro(W), \
+    Macro(WN), Macro(HWN), Macro(DHWN), \
+    Macro(C), \
+    Macro(KRST), Macro(RST), Macro(RS), Macro(T), Macro(R), Macro(S), \
+    Macro(magic_RS), Macro(shift_RS), Macro(magic_S), Macro(shift_S), \
+    Macro(pad_d), Macro(pad_h),Macro(pad_w), \
+    Macro(str_d), Macro(str_h), Macro(str_w), \
+    Macro(dil_d), Macro(dil_h), Macro(dil_w), \
+    Macro(P2), Macro(Q), Macro(PQk), Macro(Qk), Macro(k), \
+    Macro(magic_PQk), Macro(shift_PQk), Macro(magic_Qk), Macro(shift_Qk), \
+    Macro(magic_k), Macro(shift_k), \
+    Macro(QN), Macro(PQN), Macro(MPQN), \
+    Macro(gridN), Macro(gridQN), Macro(gridPQN), Macro(gridMPQN)
+
+extern "C" __device__ void Name(_device) (Signature);
+
+__global__ void Name(_global) (Signature)
 {
-	sconv_direct_fprop_128x128(
-		param_Sum,
-    	param_X,
-    	param_O,
-    	param_I,
-    	param_F,
-    	param_alpha,
-    	param_beta,
-    	param_flags,
-    	param_N,
-    	param_K,
-    	param_D,
-    	param_H,
-    	param_W,
-    	param_WN,
-    	param_HWN,
-    	param_DHWN,
-    	param_C,
-    	param_KRST,
-    	param_RST,
-    	param_RS,
-    	param_T,
-    	param_R,
-    	param_S,
-    	param_magic_RS,
-    	param_shift_RS,
-    	param_magic_S,
-    	param_shift_S,
-    	param_pad_d,
-    	param_pad_h,
-    	param_pad_w,
-    	param_str_d,
-    	param_str_h,
-    	param_str_w,
-    	param_dil_d,
-    	param_dil_h,
-    	param_dil_w,
-    	param_P2,
-    	param_Q,
-    	param_PQk,
-    	param_Qk,
-    	param_k,
-    	param_magic_PQk,
-    	param_shift_PQk,
-    	param_magic_Qk,
-    	param_shift_Qk,
-    	param_magic_k,
-    	param_shift_k,
-    	param_QN,
-    	param_PQN,
-    	param_MPQN,
-    	param_gridN,
-    	param_gridQN,
-    	param_gridPQN,
-    	param_gridMPQN);
+    Name(_device)(Parameter(O, GetVar));
+}
+
+void **MakeLaunchKernelParameter(initializer_list<void *> list)
+{
+    void **param = new void*[list.size()];
+    void **param_iter = param;
+    copy(list.begin(), list.end(), param_iter);
+    return param;
 }
 
 unsigned ceil_div(unsigned x, unsigned y)
@@ -227,214 +116,78 @@ tuple<unsigned, unsigned> magic64(unsigned d)
 	return tuple<unsigned, unsigned>(magic, shift);
 }
 
-void cudnn_conv_fprop(
-    float* param_O,
-    float* param_I,
-    float* param_F,
-    float param_alpha,
-    float param_beta,
-    unsigned param_N,
-    unsigned param_K,
-    unsigned param_H,
-    unsigned param_W,
-    unsigned param_C,
-    unsigned param_R,
-    unsigned param_S,
-    int param_pad_d,
-    int param_pad_h,
-    int param_pad_w,
-    unsigned param_str_d,
-    unsigned param_str_h,
-    unsigned param_str_w,
-    unsigned param_dil_d,
-    unsigned param_dil_h,
-    unsigned param_dil_w,
-    unsigned param_P,
-    unsigned param_Q)
-{
-  cudnnHandle_t cudnn;
-  CHECK_CUDNN_CALL(cudnnCreate(&cudnn));
-
-  cudnnTensorDescriptor_t input_descriptor;
-  CHECK_CUDNN_CALL(cudnnCreateTensorDescriptor(&input_descriptor));
-  CHECK_CUDNN_CALL(cudnnSetTensor4dDescriptor(input_descriptor,
-                                        /*format=*/CUDNN_TENSOR_NHWC,
-                                        /*dataType=*/CUDNN_DATA_FLOAT,
-                                        /*batch_size=*/param_N,
-                                        /*channels=*/param_C,
-                                        /*image_height=*/param_H,
-                                        /*image_width=*/param_W));
-
-  cudnnFilterDescriptor_t kernel_descriptor;
-  CHECK_CUDNN_CALL(cudnnCreateFilterDescriptor(&kernel_descriptor));
-  CHECK_CUDNN_CALL(cudnnSetFilter4dDescriptor(kernel_descriptor,
-                                        /*dataType=*/CUDNN_DATA_FLOAT,
-                                        /*format=*/CUDNN_TENSOR_NCHW,
-                                        /*out_channels=*/param_K,
-                                        /*in_channels=*/param_C,
-                                        /*kernel_height=*/param_S,
-                                        /*kernel_width=*/param_R));
-
-  cudnnConvolutionDescriptor_t convolution_descriptor;
-  CHECK_CUDNN_CALL(cudnnCreateConvolutionDescriptor(&convolution_descriptor));
-  CHECK_CUDNN_CALL(cudnnSetConvolution2dDescriptor(convolution_descriptor,
-                                             /*pad_height=*/param_pad_h,
-                                             /*pad_width=*/param_pad_w,
-                                             /*vertical_stride=*/param_str_h,
-                                             /*horizontal_stride=*/param_str_w,
-                                             /*dilation_height=*/param_dil_h,
-                                             /*dilation_width=*/param_dil_w,
-                                             /*mode=*/CUDNN_CROSS_CORRELATION,
-                                             /*computeType=*/CUDNN_DATA_FLOAT));
-
-  int batch_size{0}, channels{0}, height{0}, width{0};
-  CHECK_CUDNN_CALL(cudnnGetConvolution2dForwardOutputDim(convolution_descriptor,
-                                                   input_descriptor,
-                                                   kernel_descriptor,
-                                                   &batch_size,
-                                                   &channels,
-                                                   &height,
-                                                   &width));
-
-  cudnnTensorDescriptor_t output_descriptor;
-  CHECK_CUDNN_CALL(cudnnCreateTensorDescriptor(&output_descriptor));
-  CHECK_CUDNN_CALL(cudnnSetTensor4dDescriptor(output_descriptor,
-                                        /*format=*/CUDNN_TENSOR_NHWC,
-                                        /*dataType=*/CUDNN_DATA_FLOAT,
-                                        /*batch_size=*/param_N,
-                                        /*channels=*/param_K,
-                                        /*image_height=*/param_P,
-                                        /*image_width=*/param_Q));
-
-  cudnnConvolutionFwdAlgo_t convolution_algorithm;
-  CHECK_CUDNN_CALL(
-      cudnnGetConvolutionForwardAlgorithm(cudnn,
-                                          input_descriptor,
-                                          kernel_descriptor,
-                                          convolution_descriptor,
-                                          output_descriptor,
-                                          CUDNN_CONVOLUTION_FWD_PREFER_FASTEST,
-                                          /*memoryLimitInBytes=*/0,
-                                          &convolution_algorithm));
-
-  size_t workspace_bytes{0};
-  CHECK_CUDNN_CALL(cudnnGetConvolutionForwardWorkspaceSize(cudnn,
-                                                     input_descriptor,
-                                                     kernel_descriptor,
-                                                     convolution_descriptor,
-                                                     output_descriptor,
-                                                     convolution_algorithm,
-                                                     &workspace_bytes));
-  void* d_workspace{nullptr};
-  CHECK_CUDA_CALL(cudaMalloc(&d_workspace, workspace_bytes));
-
-  CHECK_CUDNN_CALL(cudnnConvolutionForward(cudnn,
-                                     &param_alpha,
-                                     input_descriptor,
-                                     param_I,
-                                     kernel_descriptor,
-                                     param_F,
-                                     convolution_descriptor,
-                                     convolution_algorithm,
-                                     d_workspace,
-                                     workspace_bytes,
-                                     &param_beta,
-                                     output_descriptor,
-                                     param_O));
-
-  CHECK_CUDA_CALL(cudaFree(d_workspace));
-  CHECK_CUDNN_CALL(cudnnDestroyTensorDescriptor(input_descriptor));
-  CHECK_CUDNN_CALL(cudnnDestroyTensorDescriptor(output_descriptor));
-  CHECK_CUDNN_CALL(cudnnDestroyFilterDescriptor(kernel_descriptor));
-  CHECK_CUDNN_CALL(cudnnDestroyConvolutionDescriptor(convolution_descriptor));
-  CHECK_CUDNN_CALL(cudnnDestroy(cudnn));
-}
-
-void check_close(float *O0, float *O1, unsigned n)
-{
-    for (int i = 0; i < n; i++)
-    {
-        std::cout << fabs(O0[i] - O1[i]) << std::endl;
+template <typename T>
+class HDMem {
+public:
+    HDMem(size_t size) : size(size) {
+        hbase = MakeRandomMemory();
+        ASSERT(hbase != nullptr);
+        CHECK_CUDA_CALL(cudaMalloc(&dbase, size * sizeof(T)));
+        CHECK_CUDA_CALL(cudaMemcpy(
+            dbase, hbase, size * sizeof(T), cudaMemcpyHostToDevice));
     }
-}
-
-void random_array(float *array, unsigned n)
-{
-    for (unsigned i = 0; i < n; ++i) {
-        array[i] = static_cast<float>(rand() % 0xffff);
+    
+    ~HDMem() {
+        delete[] hbase;
+        CHECK_CUDA_CALL(cudaFree(dbase));
     }
-}
+
+    HDMem(const HDMem&) = delete;
+    HDMem& operator=(const HDMem&) = delete;
+    
+    operator T*() {
+        return dbase;
+    }
+
+    void CopyBackToHost() {
+        CHECK_CUDA_CALL(cudaMemcpy(
+            hbase, dbase, size * sizeof(T), cudaMemcpyDeviceToHost));
+    }
+
+    bool operator==(const HDMem<T>& other) {
+        bool close = true;
+        for (size_t i = 0; i < size; i++) {
+            if (abs(hbase[i] - other.hbase[i]) > 1e5) {
+                close = false;
+                break;
+            }
+        }
+        return close;
+    }
+
+private:
+    T *MakeRandomMemory() {
+        T *array = new T[size];
+        for (size_t i = 0; i < size; i++)
+            array[i] = static_cast<T>(rand() % 10);
+        return array;
+    }
+
+private:
+    size_t size;
+    T *hbase;
+    T *dbase;
+};
 
 int main(int argc, char const *argv[])
 {
-    unsigned N = 128;
-    unsigned C = 4;
-    unsigned K = 128;
-    unsigned D = 1;
-    unsigned H = 128;
-    unsigned W = 128;
-    unsigned T = 1;
-    unsigned R = 3;
-    unsigned S = 3;
-    int pad_d = 0;
-    int pad_h = 0;
-    int pad_w = 0;
-    unsigned str_d = 1;
-    unsigned str_h = 1;
-    unsigned str_w = 1;
-    unsigned dil_d = 1;
-    unsigned dil_h = 1;
-    unsigned dil_w = 1;
+    unsigned N = 128, C = 4  , K = 128;
+    unsigned D = 1  , H = 128, W = 128;
+    unsigned T = 1  , R = 3  , S = 3;
+    unsigned pad_d = 0, pad_h = 0, pad_w = 0;
+    unsigned str_d = 1, str_h = 1, str_w = 1;
+    unsigned dil_d = 1, dil_h = 1, dil_w = 1;
     unsigned M = 1;
     unsigned P = (H + 2 * pad_h - (dil_h * (R - 1) + 1)) / str_h + 1;
     unsigned Q = (W + 2 * pad_w - (dil_w * (S - 1) + 1)) / str_w + 1;
-
-    float* Sum = NULL;
-    float* X = NULL;
-    float* O0 = new float[N * M * P * Q * K];
-    float* O1 = new float[N * M * P * Q * K];
-    float* I = new float[N * D * H * W * C];
-    float* F = new float[K * T * R * S * C];
-
-    float alpha = 1.0;
-    float beta = 0.0;
-    unsigned flags = 0;
-
-    float* DO = NULL;
-    float* DI = NULL;
-    float* DF = NULL;
-
-    random_array(I, N * M * P * Q * K);
-    random_array(F, K * T * R * S * C);
-
-    memset(O0, 0, sizeof(float) * N * M * P * Q * K);
-    memset(O1, 0, sizeof(float) * N * M * P * Q * K);
-
-    CHECK_CUDA_CALL(cudaMalloc((void **)&DO, sizeof(float) * N * M * P * Q * K));
-    CHECK_CUDA_CALL(cudaMalloc((void **)&DI, sizeof(float) * N * D * H * W * C));
-    CHECK_CUDA_CALL(cudaMalloc((void **)&DF, sizeof(float) * K * T * R * S * C));
-
-    CHECK_CUDA_CALL(cudaMemcpy(DI, I, sizeof(float) * N * D * H * W * C, cudaMemcpyHostToDevice));
-    CHECK_CUDA_CALL(cudaMemcpy(DF, F, sizeof(float) * K * T * R * S * C, cudaMemcpyHostToDevice));
-    CHECK_CUDA_CALL(cudaMemcpy(DO, O0, sizeof(float) * N * M * P * Q * K, cudaMemcpyHostToDevice));
-
-    unsigned blockK = 128;
-    unsigned blockN = 128;
-
-    unsigned gridK = ceil_div(K, blockK);
-    unsigned gridN = ceil_div(N, blockN);
-    
-    unsigned RS = R * S;
-    unsigned RST = T * RS;
-    unsigned KRST = K * RST;
-
+    unsigned WN = W * N, HWN = H * W * N, DHWN = D * H * W * N;
+    unsigned QN = Q * N, PQN = P * Q * N, MPQN = M * P * Q * N;
+    unsigned blockK = 128, blockN = 128;
+    unsigned gridK = ceil_div(K, blockK), gridN = ceil_div(N, blockN);
+    unsigned RS = R * S, RST = T * RS, KRST = K * RST;
     unsigned k = closest_divisor(gridK, 128 / blockK);
-
-    unsigned P2 = P / 2;
-    unsigned Q2 = Q * 2;
-    unsigned Qk = Q2 * k;
-    unsigned PQk = P * Q * k;
-    
+    unsigned P2 = P / 2, Q2 = Q * 2;
+    unsigned Qk = Q2 * k, PQk = P * Q * k;
     unsigned magic_PQk, shift_PQk;
     tie(magic_PQk, shift_PQk) = magic64(PQk);
     unsigned magic_Qk, shift_Qk;
@@ -445,178 +198,49 @@ int main(int argc, char const *argv[])
     tie(magic_RS, shift_RS) = magic32(RST + 32, RS);
     unsigned magic_S, shift_S;
     tie(magic_S, shift_S) = magic32(RS + 32, S);
-
-	unsigned bsum_warps = blockN / 64;
+    unsigned bsum_warps = blockN / 64;
     unsigned gridNw = gridN * bsum_warps;
-    unsigned gridQNw = Q * gridNw;
-    unsigned gridPQNw = P * gridQNw;
-	unsigned gridMPQNw = M * gridPQNw;
-	unsigned gridMPQ = M * P * Q;    
+    unsigned gridQN = Q * gridNw;
+    unsigned gridPQN = P * gridQN;
+    unsigned gridMPQN = M * gridPQN;
+    unsigned gridMPQ = M * P * Q; 
+    float alpha = 1.0, beta = 0.0;
+    unsigned flags = 0;
+    float *Sum = nullptr, *X = nullptr;
 
-	dim3 grid(gridMPQ * k, gridK / k, gridN);
-	dim3 block(256, 1, 1);
+    HDMem<float> I(N * D * H * W * C);
+    HDMem<float> F(K * T * R * S * C);
+    HDMem<float> CTRL(N * M * P * Q * K);
+    HDMem<float> EXPR(N * M * P * Q * K);
 
-    cout << "grid = (" << grid.x << "," << grid.y << "," << grid.z << ")" << endl;
-    cout << "block = (" << block.x << "," << block.y << "," << block.z << ")" << endl;
-
-    cout << alpha << ", ";             
-    cout << beta << ", ";              
-    cout << flags << ", ";             
-    cout << N << ", ";                 
-    cout << K << ", ";                 
-    cout << D << ", ";                 
-    cout << H << ", ";                 
-    cout << W << ", ";                 
-    cout << W * N << ", ";             
-    cout << H * W * N << ", ";         
-    cout << D * H * W * N << ", ";     
-    cout << C << ", ";                 
-    cout << KRST << ", ";              
-    cout << RST << ", ";               
-    cout << RS << ", ";                
-    cout << T << ", ";                 
-    cout << R << ", ";                 
-    cout << S << ", ";                 
-    cout << magic_RS << ", ";          
-    cout << shift_RS << ", ";          
-    cout << magic_S << ", ";           
-    cout << shift_S << ", ";           
-    cout << pad_d << ", ";             
-    cout << pad_h << ", ";             
-    cout << pad_w << ", ";             
-    cout << str_d << ", ";             
-    cout << str_h << ", ";             
-    cout << str_w << ", ";             
-    cout << dil_d << ", ";             
-    cout << dil_h << ", ";             
-    cout << dil_w << ", ";             
-    cout << P2 << ", ";                
-    cout << Q << ", ";                 
-    cout << PQk << ", ";               
-    cout << Qk << ", ";                
-    cout << k << ", ";                 
-    cout << magic_PQk << ", ";         
-    cout << shift_PQk << ", ";         
-    cout << magic_Qk << ", ";          
-    cout << shift_Qk << ", ";          
-    cout << magic_k << ", ";           
-    cout << shift_k << ", ";           
-    cout << Q * N << ", ";             
-    cout << P * Q * N << ", ";         
-    cout << M * P * Q * N << ", ";     
-    cout << gridNw << ", ";            
-    cout << gridQNw << ", ";           
-    cout << gridPQNw << ", ";          
-    cout << gridMPQNw << endl;
-
-    CHECK_CUDA_CALL(cudaDeviceSetLimit(cudaLimitStackSize, 4096));   
-
-    sconv_direct_fprop_128x128_global<<<grid, block>>>(
-    	Sum,               
-    	X,                 
-    	DO,                
-    	DI,                
-    	DF,                
-    	alpha,             
-    	beta,              
-    	flags,             
-    	N,                 
-    	K,                 
-    	D,                 
-    	H,                 
-    	W,                 
-    	W * N,             
-    	H * W * N,         
-    	D * H * W * N,     
-    	C,                 
-    	KRST,              
-    	RST,               
-    	RS,                
-    	T,                 
-    	R,                 
-    	S,                 
-    	magic_RS,          
-    	shift_RS,          
-    	magic_S,           
-    	shift_S,           
-    	pad_d,             
-    	pad_h,             
-    	pad_w,             
-    	str_d,             
-    	str_h,             
-    	str_w,             
-    	dil_d,             
-    	dil_h,             
-    	dil_w,             
-    	P2,                
-    	Q,                 
-    	PQk,               
-    	Qk,                
-    	k,                 
-    	magic_PQk,         
-    	shift_PQk,         
-    	magic_Qk,          
-    	shift_Qk,          
-    	magic_k,           
-    	shift_k,           
-    	Q * N,             
-    	P * Q * N,         
-    	M * P * Q * N,     
-    	gridNw,            
-    	gridQNw,           
-    	gridPQNw,          
-    	gridMPQNw);        
+    cout << "EXPR begin" << endl;
+    dim3 grid(gridMPQ * k, gridK / k, gridN), block(256, 1, 1);
+    CHECK_CUDA_CALL(cudaDeviceSetLimit(cudaLimitStackSize, 4096)); 
+    Name(_global)<<<grid, block>>>(Parameter(EXPR, GetVar));
     CHECK_CUDA_CALL(cudaGetLastError());
-    CHECK_CUDA_CALL(cudaMemcpy(O0, DO, sizeof(float) * N * M * P * Q * K, cudaMemcpyDeviceToHost));
-    for (int i = 0; i < 10; ++i)
-    {
-        std::cout << O0[i] << std::endl;
-    }
+    cout << "EXPR finished" << endl;
 
-    CHECK_CUDA_CALL(cudaMemcpy(DI, I, sizeof(float) * N * D * H * W * C, cudaMemcpyHostToDevice));
-    CHECK_CUDA_CALL(cudaMemcpy(DF, F, sizeof(float) * K * T * R * S * C, cudaMemcpyHostToDevice));
-    CHECK_CUDA_CALL(cudaMemcpy(DO, O1, sizeof(float) * N * M * P * Q * K, cudaMemcpyHostToDevice));
+    cout << "CTRL begin" << endl;
+    CUmodule module;
+    CUfunction function;
+    CUstream stream; 
+    int shared_size;
+    CHECK_CUDADriver_CALL(cuModuleLoad(
+        &module, Stringlize(Name(.cubin))));
+    CHECK_CUDADriver_CALL(cuModuleGetFunction(
+        &function, module, Stringlize(Name(_device))));
+    CHECK_CUDADriver_CALL(cuFuncGetAttribute(
+        &shared_size, CU_FUNC_ATTRIBUTE_SHARED_SIZE_BYTES, function));
+    CHECK_CUDADriver_CALL(cuStreamCreate(
+        &stream, CU_STREAM_DEFAULT));
+    CHECK_CUDADriver_CALL(cuLaunchKernel(
+        function, grid.x, grid.y, grid.z, block.x, block.y, block.z, shared_size,
+        stream, MakeLaunchKernelParameter({Parameter(CTRL, GetAddr)}), nullptr));
+    cout << "CTRL finished" << endl;
 
-    cudnn_conv_fprop(   
-        DO,
-        DI,
-        DF,
-        alpha,
-        beta,
-        N,
-        K,
-        H,
-        W,
-        C,
-        R,
-        S,
-        pad_d,
-        pad_h,
-        pad_w,
-        str_d,
-        str_h,
-        str_w,
-        dil_d,
-        dil_h,
-        dil_w,
-        P,
-        Q);
-    CHECK_CUDA_CALL(cudaMemcpy(O1, DO, sizeof(float) * N * M * P * Q * K, cudaMemcpyDeviceToHost));
-    for (int i = 0; i < 10; ++i)
-    {
-        std::cout << O1[i] << std::endl;
-    }
-
-    // check_close(O0, O1, N * M * P * Q * K);
-
-    CHECK_CUDA_CALL(cudaFree(DI));
-    CHECK_CUDA_CALL(cudaFree(DO));
-    CHECK_CUDA_CALL(cudaFree(DF));
-
-    delete[] I;
-    delete[] F;
-    delete[] O0;
-    delete[] O1;
+    CTRL.CopyBackToHost();
+    EXPR.CopyBackToHost();
+    ASSERT(CTRL == EXPR);
 
 	return 0;
 }
