@@ -119,7 +119,7 @@ def timing_conv_layer(config):
 def test_sconv_direct_fprop_128x128():
 
     N, C, K = 128, 4, 128
-    D, H, W = 1, 128, 128
+    D, H, W = 1, 32, 32
     T, R, S = 1, 3, 3
     pad_d, pad_h, pad_w = 0, 0, 0
     str_d, str_h, str_w = 1, 1, 1
@@ -139,23 +139,8 @@ def test_sconv_direct_fprop_128x128():
     print(conv_layer.nglayer.fprop_kernels.kernel_name)
 
     conv_layer.allocate()
-    print('.')
     I = GPUTensor(be, (C, D, H, W, N))
-    print('.')
     O = conv_layer.fprop(I, inference=True)
-    print('.')
-    HI = I.get().flatten()
-    print('.')
-    HO = O.get().flatten()
-    print('.')
-    HF = conv_layer.W.get().flatten()
-    print('.')
-    np.savetxt('input.csv', HI, delimiter=',')
-    print('.')
-    np.savetxt('input.csv', HO, delimiter=',')
-    print('.')
-    np.savetxt('input.csv', HF, delimiter=',')
-    print('.')
 
 #for config in configs:
 #    print(config, end=' ')

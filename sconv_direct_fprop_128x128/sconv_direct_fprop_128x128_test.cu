@@ -10,14 +10,17 @@
 #include <algorithm>
 #include <stdexcept>
 #include <iostream>
+#include <fstream>
 
 using namespace std;
 
-#define Stringlize(literal) \
-    # literal
+#define __Stringlize__(literal) #literal
+#define __Concatenate__(left, right) left ## right
 
-#define Name(postfix) \
-    sconv_direct_fprop_128x128 ## postfix
+#define Name(postfix) __Concatenate__(sconv_direct_fprop_128x128, postfix)
+#define Stringlize(literal) __Stringlize__(literal)
+
+// #define NeonFile Name(.cubin)
 
 #define Signature \
     float* Sum, float* X, float* O, float* I, float* F, \
@@ -34,10 +37,12 @@ using namespace std;
     unsigned magic_PQk, unsigned shift_PQk, unsigned magic_Qk, unsigned shift_Qk, \
     unsigned magic_k, unsigned shift_k, \
     unsigned QN, unsigned PQN, unsigned MPQN, \
-    unsigned gridN, unsigned gridQN, unsigned gridPQN, unsigned gridMPQN
+    unsigned gridNw, unsigned gridQNw, unsigned gridPQNw, unsigned gridMPQNw
 
 #define GetVar(x) (x)
 #define GetAddr(x) (&(x))
+#define Dump(x) (cout << x << " ")
+
 #define Parameter(O, Macro) \
     Macro(Sum), Macro(X), Macro(O), Macro(I), Macro(F), \
     Macro(alpha), Macro(beta), Macro(flags), \
@@ -53,10 +58,9 @@ using namespace std;
     Macro(magic_PQk), Macro(shift_PQk), Macro(magic_Qk), Macro(shift_Qk), \
     Macro(magic_k), Macro(shift_k), \
     Macro(QN), Macro(PQN), Macro(MPQN), \
-    Macro(gridN), Macro(gridQN), Macro(gridPQN), Macro(gridMPQN)
+    Macro(gridNw), Macro(gridQNw), Macro(gridPQNw), Macro(gridMPQNw)
 
 extern "C" __device__ void Name(_device) (Signature);
-
 __global__ void Name(_global) (Signature)
 {
     Name(_device)(Parameter(O, GetVar));
@@ -158,8 +162,17 @@ public:
 private:
     T *MakeRandomMemory() {
         T *array = new T[size];
-        for (size_t i = 0; i < size; i++)
-            array[i] = static_cast<T>(rand() % 10);
+        ifstream ifs("/dev/urandom", ifstream::binary);
+        ASSERT(ifs.is_open());
+        char *base = reinterpret_cast<char *>(array);
+        size_t i, length = size * sizeof(T);
+        for (i = 0; i < length; i+=1024) {
+            ifs.read(base + i, 1024);
+            ASSERT(ifs);
+        }
+        ifs.read(base + i - 1024, length - i + 1024);
+        ASSERT(ifs);
+        ifs.close();
         return array;
     }
 
@@ -172,7 +185,7 @@ private:
 int main(int argc, char const *argv[])
 {
     unsigned N = 128, C = 4  , K = 128;
-    unsigned D = 1  , H = 128, W = 128;
+    unsigned D = 1  , H = 32, W = 32;
     unsigned T = 1  , R = 3  , S = 3;
     unsigned pad_d = 0, pad_h = 0, pad_w = 0;
     unsigned str_d = 1, str_h = 1, str_w = 1;
@@ -200,9 +213,9 @@ int main(int argc, char const *argv[])
     tie(magic_S, shift_S) = magic32(RS + 32, S);
     unsigned bsum_warps = blockN / 64;
     unsigned gridNw = gridN * bsum_warps;
-    unsigned gridQN = Q * gridNw;
-    unsigned gridPQN = P * gridQN;
-    unsigned gridMPQN = M * gridPQN;
+    unsigned gridQNw = Q * gridNw;
+    unsigned gridPQNw = P * gridQNw;
+    unsigned gridMPQNw = M * gridPQNw;
     unsigned gridMPQ = M * P * Q; 
     float alpha = 1.0, beta = 0.0;
     unsigned flags = 0;
@@ -213,9 +226,14 @@ int main(int argc, char const *argv[])
     HDMem<float> CTRL(N * M * P * Q * K);
     HDMem<float> EXPR(N * M * P * Q * K);
 
-    cout << "EXPR begin" << endl;
+    CHECK_CUDA_CALL(cudaDeviceSetLimit(cudaLimitStackSize, 16 * 4096)); 
+
+    Parameter(CTRL, Dump) << endl;;
     dim3 grid(gridMPQ * k, gridK / k, gridN), block(256, 1, 1);
-    CHECK_CUDA_CALL(cudaDeviceSetLimit(cudaLimitStackSize, 4096)); 
+    cout << "grid(" << grid.x <<"," << grid.y << "," << grid.z << ")" << endl;
+    cout << "block(" << block.x <<"," << block.y << "," << block.z << ")" << endl;
+
+    cout << "EXPR begin" << endl;
     Name(_global)<<<grid, block>>>(Parameter(EXPR, GetVar));
     CHECK_CUDA_CALL(cudaGetLastError());
     cout << "EXPR finished" << endl;
@@ -226,9 +244,9 @@ int main(int argc, char const *argv[])
     CUstream stream; 
     int shared_size;
     CHECK_CUDADriver_CALL(cuModuleLoad(
-        &module, Stringlize(Name(.cubin))));
+        &module, Stringlize(Name().cubin)));
     CHECK_CUDADriver_CALL(cuModuleGetFunction(
-        &function, module, Stringlize(Name(_device))));
+        &function, module, Stringlize(Name())));
     CHECK_CUDADriver_CALL(cuFuncGetAttribute(
         &shared_size, CU_FUNC_ATTRIBUTE_SHARED_SIZE_BYTES, function));
     CHECK_CUDADriver_CALL(cuStreamCreate(
