@@ -245,7 +245,7 @@ SASS1 = sconv_xprop_X128_N128.sass
 ################################################################################
 
 # Target rules
-all: run
+all: test
 
 $(KERNEL)_device.cubin: $(KERNEL)_device.cu
 	$(EXEC) $(NVCC) $(INCLUDES) $(ALL_CCFLAGS) $(GENCODE_FLAGS) -cubin $<
@@ -262,12 +262,6 @@ $(KERNEL)_test.o: $(KERNEL)_test.cu
 
 test: $(KERNEL)_test.o $(KERNEL)_device.o #$(KERNEL).o
 	$(EXEC) $(NVCC) $(ALL_LDFLAGS) $(GENCODE_FLAGS) -o $@ $+ $(LIBRARIES)
-
-$(KERNEL).cubin: ~/.cache/neon/kernels/cubin/$(KERNEL).cubin
-	cp ~/.cache/neon/kernels/cubin/$(KERNEL).cubin .
-
-run: test $(KERNEL).cubin
-	./test
 
 clean:
 	rm -f test *.o *.cubin
